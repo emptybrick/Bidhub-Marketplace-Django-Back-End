@@ -11,6 +11,8 @@ Live Links
     •	Planning / Wireframes: TODO: Link to Figma or docs
     •	Project Board / Issues: TODO: GitHub Projects link
 
+    ## Move to frond end read-me
+
 Overview
 
 Bidhub is a learning-oriented marketplace MVP demonstrating:
