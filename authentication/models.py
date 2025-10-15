@@ -2,7 +2,7 @@ from django.db import models
 # user model that already exists in django
 from django.contrib.auth.models import AbstractUser
 from phonenumber_field.modelfields import PhoneNumberField
-
+from django.core.validators import MinValueValidator
 
 class User(AbstractUser):  # we extend the AbstractUser and add the fields that we want for our users
     username = models.CharField(max_length=24, blank=False, null=False)
@@ -17,4 +17,5 @@ class User(AbstractUser):  # we extend the AbstractUser and add the fields that 
     phone_number = PhoneNumberField(blank=False, null=False)
     wallet = models.DecimalField(blank=True, null=True, max_digits=12,
                                  decimal_places=2, validators=[MinValueValidator(0.01)])
-    user_rating = models.DecimalField(blank=True, null=True)
+    user_rating = models.DecimalField(blank=True, null=True, max_digits=3,
+                                      decimal_places=2, validators=[MinValueValidator(0.01)])
