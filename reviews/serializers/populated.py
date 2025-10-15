@@ -1,5 +1,7 @@
-from .common import CommentSerializer
+from .common import ReviewsSerializer
 from authentication.serializers import UserSerializer
 
-class PopulatedCommentSerializer(CommentSerializer):
+
+class PopulatedReviewsSerializer(ReviewsSerializer):
     owner = UserSerializer()
+    # Add other fields as needed

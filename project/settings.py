@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'bids',
     'reviews',
     'items',
-    'wallet'
+    'wallet',
     'corsheaders',
 ]
 
@@ -95,9 +95,10 @@ WSGI_APPLICATION = 'project.wsgi.application'
 DATABASES = {  # added this to use postgres as the database instead of the default sqlite. do this before running the initial migrations or you will need to do it again
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'items-api',
+        'NAME': 'bidhub',
         'HOST': 'localhost',
-        'PORT': 5432
+        'PORT': 5433,
+        'USER': 'quan',
     }
 }
 

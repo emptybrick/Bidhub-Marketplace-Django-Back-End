@@ -1,10 +1,8 @@
 from .common import itemserializer
-from authors.serializers.common import AuthorSerializer
 from authentication.serializers import UserSerializer
-from comments.serializers.populated import PopulatedCommentSerializer
-
+from reviews.serializers.populated import PopulatedReviewsSerializer
 
 class Populateditemserializer(itemserializer):
-    author = AuthorSerializer()
+    author = UserSerializer()
     owner = UserSerializer()
-    comments = PopulatedCommentSerializer(many=True)
+    reviews = PopulatedReviewsSerializer(many=True)

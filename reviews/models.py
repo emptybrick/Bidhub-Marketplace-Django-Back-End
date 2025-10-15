@@ -3,7 +3,7 @@ from django.db import models
 # Create your models here.
 
 
-class Comment(models.Model):
+class Review(models.Model):
     def __str__(self):
         return f'{self.text} - {self.Item}'
 

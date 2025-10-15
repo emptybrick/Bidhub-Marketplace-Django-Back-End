@@ -10,8 +10,8 @@ class Item(models.Model):
     # models.CharField is the data type and means "string"
     title = models.CharField(max_length=80, unique=True)
     author = models.ForeignKey(
-        "authors.Author",
-        related_name="items",
+        "authentication.User",
+        related_name="created_items",
         on_delete=models.CASCADE
     )
 
