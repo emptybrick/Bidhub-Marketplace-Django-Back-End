@@ -9,9 +9,9 @@ autopep8 = "*"
 pyjwt = "*"
 psycopg2-binary = "*"
 djangorestframework = "*"
-django = "*"
 python_dotenv = "*"
 django-phonenumber-field = "*"
+django = "*"
 
 [dev-packages]
 autopep8 = "*"
