@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
+
 class Bid(models.Model):
     user_id = models.ForeignKey(
         'authentication.User',
@@ -9,3 +10,8 @@ class Bid(models.Model):
     bid = models.DecimalField(blank=False, null=False, max_digits=10,
                               decimal_places=2, validators=[MinValueValidator(1)])
     created_at = models.DateTimeField(auto_now_add=True)
+    item_id = models.ForeignKey(
+        'items.Item',
+        on_delete=models.CASCADE,
+        related_name="bids"
+    )

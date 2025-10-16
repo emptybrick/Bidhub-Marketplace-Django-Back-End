@@ -6,7 +6,6 @@ from django.core.exceptions import ValidationError
 
 User = get_user_model()
 
-
 # never converted to json and returned in response
 class UserSerializer(serializers.ModelSerializer):
     # write_only=True ensures never sent back in JSON

@@ -52,10 +52,22 @@ class LoginView(APIView):
 class UserView(APIView):
     """View for retrieving user profile information"""
 
-    def get(self, request):
-        user = request.user
-        serialized_user = UserSerializer(user)
-        return Response(serialized_user.data)
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        # Check if user is requesting their own profile or has admin permissions
+        if request.user.id == pk or request.user.is_staff:
+            try:
+                user = get_user_model().objects.get(pk=pk)
+                serializer = UserSerializer(user)
+                return Response(serializer.data)
+            except get_user_model().DoesNotExist:
+                return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            return Response(
+                {"detail": "You don't have permission to view this profile"},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
 
 class ProfileUpdateView(APIView):

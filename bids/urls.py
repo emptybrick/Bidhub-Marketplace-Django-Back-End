@@ -14,9 +14,17 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import path
+from .views import BidListView, BidDetailView, UserBidsView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Keep only paths that use view classes you have
+    path('', BidListView.as_view()),
+    path('<int:pk>/', BidDetailView.as_view()),
+    path('users/<int:user_id>/', UserBidsView.as_view()),
+    path('my-bids/', UserBidsView.as_view()),
+
+    # Comment out paths that use non-existent views
+    # path('items/<int:item_id>/', ItemBidsView.as_view()),  # Comment out
+    # path('statistics/popular-items/', BidStatisticsView.as_view()),  # Comment out
 ]
