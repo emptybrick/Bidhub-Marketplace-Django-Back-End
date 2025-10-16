@@ -6,15 +6,18 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.pagination import PageNumberPagination
 from django.db.models import Avg, Q
 
-from .models import Review, Item
+from .models import Review
+from items.models import Item  # Import Item from items app
 from .serializers.common import ReviewsSerializer
 from .serializers.populated import PopulatedReviewSerializer
 from django.utils import timezone
+
 
 class ReviewPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 50
+
 
 class ReviewListView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -30,7 +33,8 @@ class ReviewListView(APIView):
 
         if not Item.objects.filter(
             owner=seller_id,
-            end_time__lt=timezone.now(), # end_time from items model when auction ends, __lt "less than", timezone.now().
+            # end_time from items model when auction ends, __lt "less than", timezone.now().
+            end_time__lt=timezone.now(),
             final_bidder=request.user,  # User is the winning bidder
         ).exists():
             return Response(
@@ -40,7 +44,8 @@ class ReviewListView(APIView):
 
         # Disable user from setting these fields
         if "created_at" in request.data:
-            del request.data["created_at"]  # wouldnt this be handled by not having option in form field? Ok let me check this out.
+            # wouldnt this be handled by not having option in form field? Ok let me check this out.
+            del request.data["created_at"]
 
         review_to_add = ReviewsSerializer(data=request.data)
 
@@ -49,6 +54,7 @@ class ReviewListView(APIView):
             return Response(review_to_add.data, status=status.HTTP_201_CREATED)
 
         return Response(review_to_add.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class SellerReviewsView(APIView):
     """View for getting all reviews for a specific seller"""
@@ -59,16 +65,17 @@ class SellerReviewsView(APIView):
         """Get all reviews for a seller with filtering and sorting"""
         reviews = Review.objects.filter(seller_id=seller_id)
 
-        # Sort options
+        # Sort options refer to sellerpage.jsx for sort options in frontend
         sort_by = request.query_params.get(
             'sort', '-created_at')  # Default newest first
         if sort_by not in ['created_at', '-created_at', 'rating', '-rating']:
             sort_by = '-created_at'  # Default to newest
 
-        reviews = reviews.order_by(sort_by) # Takes the queryset of reviews and orders them by the chosen field
+        # Takes the queryset of reviews and orders them by the chosen field
+        reviews = reviews.order_by(sort_by)
 
         # Get average ratings for the seller. Calculates average ratings across 5 categories.
-        avg_ratings = Review.objects.filter(seller_id=seller_id).aggregate( # aggregate - calculate at database level.
+        avg_ratings = Review.objects.filter(seller_id=seller_id).aggregate(  # aggregate - calculate at database level.
             avg_overall=Avg('overall_rating'),
             avg_service=Avg('service_rating'),
             avg_product=Avg('product_rating'),
@@ -88,6 +95,7 @@ class SellerReviewsView(APIView):
 
         return response
 
+
 class ReviewDetailView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -97,7 +105,7 @@ class ReviewDetailView(APIView):
         except Review.DoesNotExist:
             raise NotFound(detail="Review not found")
 
-    def get(self, request, pk):
+    def get(self, request, pk):  # request not accessed/used
         review = self.get_review(pk=pk)
         serialized_review = PopulatedReviewSerializer(review)
         return Response(serialized_review.data, status=status.HTTP_200_OK)

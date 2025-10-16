@@ -8,14 +8,17 @@ from django.db.models import Q, Count, Max, F, ExpressionWrapper, DurationField
 from datetime import timedelta
 
 from .models import Item
+from bids.models import Bid  # Import Bid from the correct app
 from .serializers.common import ItemSerializer
 from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
 
 class ItemPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 50
+
 
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
@@ -32,6 +35,7 @@ class ItemListView(APIView):
             items = items.filter(category=category)
 
         # Price range filtering
+        # filter by current bid - item.current_bid
         min_price = request.query_params.get('min_price')
         if min_price and min_price.isdigit():
             items = items.filter(starting_price__gte=float(min_price))
@@ -49,16 +53,18 @@ class ItemListView(APIView):
             )
 
         # Auction status filtering
+        # filter by item.end_time
+        # there is no logic for status currently need to create, auction is not used in models
         auction_status = request.query_params.get('status')
         now = timezone.now()
         if auction_status == 'active':
-            items = items.filter(Q(auction_end__gt=now) |
-                                 Q(auction_end__isnull=True))
+            items = items.filter(Q(end_time__gt=now) |
+                                 Q(end_time__isnull=True))
         elif auction_status == 'ended':
-            items = items.filter(auction_end__lte=now)
+            items = items.filter(end_time__lte=now)
         elif auction_status == 'ending_soon':
-            items = items.filter(auction_end__gt=now,
-                                 auction_end__lt=now + timedelta(hours=24))
+            items = items.filter(end_time__gt=now,
+                                 end_time__lt=now + timedelta(hours=24))
 
         # Condition filtering
         condition = request.query_params.get('condition')
@@ -73,19 +79,22 @@ class ItemListView(APIView):
 
         # Sorting
         sort_by = request.query_params.get('sort', 'created_at')
+        # starting_price = initial_bid, end_time = end_time, highest_bid = current_bid
         valid_sort_fields = ['created_at', 'starting_price',
-                             'auction_end', 'highest_bid', 'bid_count']
+                             'end_time', 'highest_bid', 'bid_count']
 
         if sort_by not in valid_sort_fields:
             sort_by = 'created_at'
 
         # Handle special sort cases
+        # there is no logic for time_remaining or status, auction is not used in models
+        # sort by end_time asc, desc
         if sort_by == 'time_remaining' and auction_status != 'ended':
             # Sort by time left in auction
-            items = items.filter(auction_end__isnull=False)
+            items = items.filter(end_time__isnull=False)
             items = items.annotate(
                 time_left=ExpressionWrapper(
-                    F('auction_end') - timezone.now(), output_field=DurationField())
+                    F('end_time') - timezone.now(), output_field=DurationField())
             )
             sort_by = 'time_left'
 
@@ -124,6 +133,7 @@ class ItemListView(APIView):
             return Response(e.__dict__ if hasattr(e, '__dict__') else str(e),
                             status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+
 class ItemDetailView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
@@ -139,6 +149,7 @@ class ItemDetailView(APIView):
         item = self.get_item(pk=pk)  # Use helper method
 
         # Get related items (same category or owner)
+        # why pull related items by category in detailed view
         related_items = Item.objects.filter(
             Q(category=item.category) | Q(owner=item.owner)
         ).exclude(pk=pk)[:5]  # Limit to 5 items
@@ -148,12 +159,13 @@ class ItemDetailView(APIView):
 
         # Auction status information
         now = timezone.now()
-        data['auction_active'] = True if not item.auction_end or item.auction_end > now else False
+        data['auction_active'] = True if not item.end_time or item.end_time > now else False
 
-        if item.auction_end:
-            if item.auction_end > now:
+        if item.end_time:
+            if item.end_time > now:
                 # Calculate time remaining and format it
-                time_remaining = item.auction_end - now
+                # we only want to show a relative end time, only show ends in 2 days 1 day, ends today
+                time_remaining = item.end_time - now
                 days, remainder = divmod(time_remaining.total_seconds(), 86400)
                 hours, remainder = divmod(remainder, 3600)
                 minutes = divmod(remainder, 60)[0]
@@ -168,7 +180,7 @@ class ItemDetailView(APIView):
                 data['time_remaining'] = None
 
         # Bid information
-        from bids.models import Bid
+        # need to include bid.user_id to populate username and then only show first and last char with 3 *'s
         bids = Bid.objects.filter(item=item)
         data['bid_count'] = bids.count()
 
@@ -192,6 +204,13 @@ class ItemDetailView(APIView):
         if item_to_update.owner.id != request.user.id:
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
 
+        # Checking if there are bids before allowing edit
+        if Bid.objects.filter(item=item_to_update).exists():
+            return Response(
+                {"detail": "Unable to edit an auction in progress."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         serialized_item = ItemSerializer(
             item_to_update, data=request.data, partial=True)
 
@@ -213,10 +232,9 @@ class ItemDetailView(APIView):
             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
 
         # Checking if there are bids before allowing deletion
-        from bids.models import Bid
         if Bid.objects.filter(item=item_to_delete).exists():
             return Response(
-                {"detail": "Cannot delete item with existing bids"},
+                {"detail": "Unable to delete an auction in progress."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 

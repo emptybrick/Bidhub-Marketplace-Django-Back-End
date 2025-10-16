@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model  # gets user model we are using
 from django.conf import settings  # import our settings for our secret
 from .serializers import UserSerializer
 import jwt  # import jwt
+from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()  # Save user model to User var
 
@@ -55,3 +56,15 @@ class UserView(APIView):
         user = request.user
         serialized_user = UserSerializer(user)
         return Response(serialized_user.data)
+
+
+class ProfileUpdateView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request):
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,8 +1,9 @@
-from .common import itemserializer
+from .common import ItemSerializer
 from authentication.serializers import UserSerializer
-from reviews.serializers.populated import PopulatedReviewsSerializer
+from reviews.serializers.populated import PopulatedReviewSerializer 
 
-class Populateditemserializer(itemserializer):
+
+class PopulatedItemSerializer(ItemSerializer):
     author = UserSerializer()
     owner = UserSerializer()
-    reviews = PopulatedReviewsSerializer(many=True)
+    reviews = PopulatedReviewSerializer(many=True)  
