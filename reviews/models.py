@@ -6,19 +6,20 @@ class Review(models.Model):
     rating = models.DecimalField(
         blank=True,
         null=True,
-        max_digits=3,
-        decimal_places=2,
-        validators=[MinValueValidator(0.01)]
+        max_digits=2,
+        decimal_places=1,
+        validators=[MinValueValidator(0.1)]
     )
     seller_id = models.ForeignKey(
         'authentication.User',
-        related_name="received_reviews",
+        related_name="seller_reviews",
         on_delete=models.CASCADE
     )
     author = models.ForeignKey(
         "authentication.User",
-        related_name="written_reviews",
-        on_delete=models.CASCADE
+        related_name="reviews",
+        on_delete=models.SET_NULL,
+        null=True
     )
     review = models.TextField(
         blank=False,

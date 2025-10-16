@@ -52,7 +52,7 @@ class User(AbstractUser):  # we extend the AbstractUser and add the fields that 
         blank=False, 
         null=False
         )
-    phone_number = PhoneNumberField(
+    phone_number = models.CharField(
         blank=False, 
         null=False
         )

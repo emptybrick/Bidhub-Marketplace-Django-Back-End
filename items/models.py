@@ -1,9 +1,8 @@
 from django.db import models
 from common.utils import Item_Categories
 from django.core.validators import MinValueValidator, MaxValueValidator
-from datetime import datetime
+# from datetime import datetime
 from django.utils import timezone
-
 
 class Item(models.Model):
     item_name = models.CharField(
@@ -14,10 +13,11 @@ class Item(models.Model):
 
     owner = models.ForeignKey(
         "authentication.User",
-        related_name="owned_items",
-        on_delete=models.PROTECT
+        related_name="items",
+        on_delete=models.CASCADE
     )
-    category = Item_Categories.choices()
+    category = models.CharField(choices=Item_Categories.choices(
+    ), default=Item_Categories.MISCELLANEOUS.name, blank=False, null=False)
     condition = models.CharField(
         max_length=4,
         choices=[('USED', 'Used'), ('NEW', 'New')],
@@ -37,7 +37,7 @@ class Item(models.Model):
     help_text="Enter a year between 1582 and the current year"
     )
 
-    country_of_origin = models.CharField(max_length=40)
+    country_of_origin = models.CharField(max_length=40, blank=True, null=True)
 
     height = models.DecimalField(
         blank=False,
@@ -84,26 +84,37 @@ class Item(models.Model):
     current_bid = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)])
+        validators=[MinValueValidator(0.01)],
+        blank=True,
+        null=True    
+        )
 
     start_time = models.DateTimeField(
         default=timezone.now
     )
 
     end_time = models.DateTimeField(
-        blank=False, null=False
+        blank=False, 
+        null=False
     )
+    
+    # a list of bid id's - research how to format and cascade to delete when item is deleted
+    # bid_history = models.ForeignKey(
+    #     "bids.Bid",
+    #     related_name='items',
+    #     on_delete=models.CASCADE,
+    #     blank=True,
+    #     null=True
+    # )
 
-    bid_history = models.ForeignKey(
-        "bids.Bid",
-        related_name='items',
-        on_delete=models.PROTECT
-    )
+    bid_history_json = models.JSONField(
+        default=list, blank=True, null=True)  # New field
 
+    # final bidder is final bid/highest bid, should be able to account for without need of another foriegnkey
     final_bidder = models.ForeignKey(
         "authentication.User",
         related_name="won_items",
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         null=True,
         blank=True
     )

@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model  # gets user model we are using
 from django.conf import settings  # import our settings for our secret
 from .serializers import UserSerializer
 import jwt  # import jwt
-from rest_framework.permissions import IsAuthenticated
+# from rest_framework.permissions import IsAuthenticated
 
 User = get_user_model()  # Save user model to User var
 
@@ -28,6 +28,7 @@ class LoginView(APIView):
 
     def post(self, request):
         # get data from the request
+        # can set to username instead of email here
         email = request.data.get('email')
         password = request.data.get('password')
         try:
@@ -49,34 +50,34 @@ class LoginView(APIView):
         return Response({'token': token, 'message': f"Welcome back {user_to_login.username}"})
 
 
-class UserView(APIView):
-    """View for retrieving user profile information"""
+# class UserView(APIView):
+#     """View for retrieving user profile information"""
 
-    permission_classes = (IsAuthenticated,)
+#     permission_classes = (IsAuthenticated,)
 
-    def get(self, request, pk):
-        # Check if user is requesting their own profile or has admin permissions
-        if request.user.id == pk or request.user.is_staff:
-            try:
-                user = get_user_model().objects.get(pk=pk)
-                serializer = UserSerializer(user)
-                return Response(serializer.data)
-            except get_user_model().DoesNotExist:
-                return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            return Response(
-                {"detail": "You don't have permission to view this profile"},
-                status=status.HTTP_403_FORBIDDEN
-            )
+#     def get(self, request, pk):
+#         # Check if user is requesting their own profile or has admin permissions
+#         if request.user.id == pk or request.user.is_staff:
+#             try:
+#                 user = get_user_model().objects.get(pk=pk)
+#                 serializer = UserSerializer(user)
+#                 return Response(serializer.data)
+#             except get_user_model().DoesNotExist:
+#                 return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+#         else:
+#             return Response(
+#                 {"detail": "You don't have permission to view this profile"},
+#                 status=status.HTTP_403_FORBIDDEN
+#             )
 
 
-class ProfileUpdateView(APIView):
-    permission_classes = (IsAuthenticated,)
+# class ProfileUpdateView(APIView):
+#     permission_classes = (IsAuthenticated,)
 
-    def put(self, request):
-        user = request.user
-        serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     def put(self, request):
+#         user = request.user
+#         serializer = UserSerializer(user, data=request.data, partial=True)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -19,6 +19,7 @@ class Item_Categories(enum.Enum):
     GARDEN = 'Patio, Lawn & Garden'
     MUSIC = 'Musical Instruments'
     COLLECTIBLES = 'Collectibles & Fine Art'
+    MISCELLANEOUS = 'Miscellaneous'
 
     @classmethod
     def choices(cls):

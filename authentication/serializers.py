@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 User = get_user_model()
 
 # never converted to json and returned in response
+
+
 class UserSerializer(serializers.ModelSerializer):
     # write_only=True ensures never sent back in JSON
     password = serializers.CharField(write_only=True)
@@ -43,5 +45,5 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         # We explicitly define fields rather than using fields="__all__" to control exactly what user data is exposed
         # This prevents accidentally exposing sensitive fields like password hash or security questions
-        fields = ('id', 'email', 'username', 'first_name', 'last_name',
-                  'profile_image', 'password', 'password_confirmation')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password', 'password_confirmation',
+                  'street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'wallet', 'user_rating')
