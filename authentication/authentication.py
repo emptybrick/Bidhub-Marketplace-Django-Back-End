@@ -9,7 +9,7 @@ User = get_user_model()
 # BasicAuthentication has stuff built in like password & email validation
 
 class JWTAuthentication(BasicAuthentication): # assertain users permissions # requests come through here # assign a permission level # if valid token -> given permission to see secure things
-    def authenticate(self, request): # check requets has token and return if so
+    def authenticate(self, request): # check request has token and return if so
         header = request.headers.get('Authorization')
 
         # if no headers, just return to end the request

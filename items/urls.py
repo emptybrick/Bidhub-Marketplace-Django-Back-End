@@ -4,7 +4,7 @@ from .views import ItemListView, ItemDetailView
 urlpatterns = [
     # Base item endpoints
     path('', ItemListView.as_view()),
-    path('<int:pk>/', ItemDetailView.as_view()),
+    path('<int:item_id>/', ItemDetailView.as_view()),
 
     # # Category endpoints
     # path('categories/<str:category>/', ItemListView.as_view()),

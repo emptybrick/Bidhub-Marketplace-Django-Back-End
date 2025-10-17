@@ -8,16 +8,11 @@ User = get_user_model()
 
 # never converted to json and returned in response
 
-
 class UserSerializer(serializers.ModelSerializer):
     # write_only=True ensures never sent back in JSON
     password = serializers.CharField(write_only=True)
     password_confirmation = serializers.CharField(write_only=True)
 
-    # validate function is going to:
-    # check our passwords match
-    # hash our passwords
-    # add back to database
     def validate(self, data):  # data comes from the request body
         print('DATA', data)
         # remove fields from request body and save to vars

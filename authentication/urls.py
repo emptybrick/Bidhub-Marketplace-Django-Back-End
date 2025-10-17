@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, LoginView
+from .views import RegisterView, LoginView, UserListView, UserView
 
 urlpatterns = [
     # Auth endpoints
@@ -7,11 +7,8 @@ urlpatterns = [
     path('login/', LoginView.as_view()),
 
     # User profile endpoints
-    # path('users/<int:pk>/account/', UserView.as_view()),
-
-
-
-
+    path('', UserListView.as_view()),
+    path('<int:pk>/', UserView.as_view()),
 
     # path('profile/update/', ProfileUpdateView.as_view()),
 

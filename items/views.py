@@ -14,17 +14,16 @@ from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from bids.serializer import BidSerializer
 
-
 # class ItemPagination(PageNumberPagination):
 #     page_size = 20
 #     page_size_query_param = 'page_size'
 #     max_page_size = 50
 
-
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     # pagination_class = ItemPagination
 
+    # GET All Items
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
         # Create base queryset
@@ -54,8 +53,9 @@ class ItemListView(APIView):
 
 
 class ItemDetailView(APIView):
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedOrReadOnly,) # both authenticated and unauthenticated users can view item details
 
+    # GET item
     def get_item(self, pk):
         """Helper method to get an item by ID"""
         try:
@@ -63,18 +63,18 @@ class ItemDetailView(APIView):
         except Item.DoesNotExist:
             raise NotFound(detail="Item not found")
 
-    def get(self, request, pk):
+    def get(self, request, item_id):
         """Get a specific item with auction status and bid information"""
-        item = self.get_item(pk=pk)  # Use helper method
+        item = self.get_item(pk=item_id)  # Use helper method
         serialized_item = PopulatedItemSerializer(item)
         data = serialized_item.data
         bid_history = item.bids.all().order_by('-bid')
         bid_serializer = BidSerializer(bid_history, many=True)
-        data['bid_history_json'] = bid_serializer
+        data['bid_history_json'] = bid_serializer.data
         
         return Response(data, status=status.HTTP_200_OK)
+    
         # item.bid_history = getAll bids by bid.item_id then sort asc(highest bid first) then BidSerializer(item.bid_history)
-
 
         # Bid information
         # need to include bid.user_id to populate username and then only show first and last char with 3 *'s

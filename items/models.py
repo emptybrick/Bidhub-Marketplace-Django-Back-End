@@ -111,9 +111,9 @@ class Item(models.Model):
         default=list, blank=True, null=True)  # New field
 
     # final bidder is final bid/highest bid, should be able to account for without need of another foriegnkey
-    final_bidder = models.ForeignKey(
+    highest_bidder = models.ForeignKey(
         "authentication.User",
-        related_name="won_items",
+        related_name="highest_bidder",
         on_delete=models.PROTECT,
         null=True,
         blank=True
