@@ -98,7 +98,7 @@ DATABASES = {  # added this to use postgres as the database instead of the defau
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'bidhub',
         'HOST': 'localhost',
-        'PORT': 5433,
+        'PORT': 5432,
         'USER': os.getenv('PROJECT_DB_USER'),
         'PASSWORD': os.getenv('PROJECT_DB_PASSWORD')
     }
