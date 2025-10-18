@@ -1,7 +1,6 @@
 from django.db import models
 # user model that already exists in django
 from django.contrib.auth.models import AbstractUser
-from phonenumber_field.modelfields import PhoneNumberField
 from django.core.validators import MinValueValidator
 
 class User(AbstractUser):  # we extend the AbstractUser and add the fields that we want for our users
@@ -70,3 +69,10 @@ class User(AbstractUser):  # we extend the AbstractUser and add the fields that 
         decimal_places=2, 
         validators=[MinValueValidator(0.01)]
         )
+
+class BlackListedToken(models.Model):
+    token = models.CharField(max_length=500)
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"Blacklisted: {self.blacklisted_at}"

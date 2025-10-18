@@ -10,10 +10,8 @@ pyjwt = "*"
 psycopg2-binary = "*"
 djangorestframework = "*"
 python_dotenv = "*"
-django-phonenumber-field = "*"
 django = "*"
 python-dotenv = "*"
-phonenumbers = "*"
 
 [dev-packages]
 autopep8 = "*"

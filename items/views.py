@@ -19,6 +19,7 @@ from bids.serializer import BidSerializer
 #     page_size_query_param = 'page_size'
 #     max_page_size = 50
 
+
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     # pagination_class = ItemPagination
@@ -37,6 +38,8 @@ class ItemListView(APIView):
 
         return Response(serialized_items.data, status=status.HTTP_200_OK)
 
+
+class CreateItem(APIView):
     def post(self, request):
         """Create a new item"""
         request.data["owner"] = request.user.id
@@ -53,7 +56,8 @@ class ItemListView(APIView):
 
 
 class ItemDetailView(APIView):
-    permission_classes = (IsAuthenticatedOrReadOnly,) # both authenticated and unauthenticated users can view item details
+    # both authenticated and unauthenticated users can view item details
+    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     # GET item
     def get_item(self, pk):
@@ -71,9 +75,53 @@ class ItemDetailView(APIView):
         bid_history = item.bids.all().order_by('-bid')
         bid_serializer = BidSerializer(bid_history, many=True)
         data['bid_history_json'] = bid_serializer.data
-        
+
         return Response(data, status=status.HTTP_200_OK)
-    
+
+    def put(self, request, item_id):
+        """Update an item"""
+        item_to_update = self.get_item(pk=item_id)
+
+        if item_to_update.owner.id != request.user.id:
+            return Response({"detail": "You Are NOT THE OWNER OF THIS ITEM"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Checking if there are bids before allowing edit
+        if item_to_update.highest_bidder:
+            return Response(
+                {"detail": "Unable to edit an auction in progress."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serialized_item = ItemSerializer(
+            item_to_update, data=request.data, partial=True)
+
+        try:
+            serialized_item.is_valid(raise_exception=True)
+            serialized_item.save()
+            return Response(serialized_item.data, status=status.HTTP_202_ACCEPTED)
+        except Exception as e:
+            return Response(
+                e.__dict__ if hasattr(e, '__dict__') else str(e),
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
+
+    def delete(self, request, item_id):
+        """Delete an item"""
+        item_to_delete = self.get_item(pk=item_id)
+
+        if item_to_delete.owner.id != request.user.id:
+            return Response({"detail": "You Are NOT THE OWNER OF THIS ITEM"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Checking if there are bids before allowing deletion
+        if item_to_delete.highest_bidder:
+            return Response(
+                {"detail": "Unable to delete an auction in progress."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        item_to_delete.delete()
+        return Response({"detail": "Item has been successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+
         # item.bid_history = getAll bids by bid.item_id then sort asc(highest bid first) then BidSerializer(item.bid_history)
 
         # Bid information
@@ -198,52 +246,8 @@ class ItemDetailView(APIView):
         #     else:
         #         data['time_remaining'] = None
 
-
-
         # # Related items
         # data['related_items'] = ItemSerializer(related_items, many=True).data
 
 
-#     def put(self, request, pk):
-#         """Update an item"""
-#         item_to_update = self.get_item(pk=pk)
-
-#         if item_to_update.owner.id != request.user.id:
-#             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-
-#         # Checking if there are bids before allowing edit
-#         if Bid.objects.filter(item=item_to_update).exists():
-#             return Response(
-#                 {"detail": "Unable to edit an auction in progress."},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-
-#         serialized_item = ItemSerializer(
-#             item_to_update, data=request.data, partial=True)
-
-#         try:
-#             serialized_item.is_valid(raise_exception=True)
-#             serialized_item.save()
-#             return Response(serialized_item.data, status=status.HTTP_202_ACCEPTED)
-#         except Exception as e:
-#             return Response(
-#                 e.__dict__ if hasattr(e, '__dict__') else str(e),
-#                 status=status.HTTP_422_UNPROCESSABLE_ENTITY
-#             )
-
-#     def delete(self, request, pk):
-#         """Delete an item"""
-#         item_to_delete = self.get_item(pk=pk)
-
-#         if item_to_delete.owner.id != request.user.id:
-#             return Response({"detail": "Unauthorized"}, status=status.HTTP_401_UNAUTHORIZED)
-
-#         # Checking if there are bids before allowing deletion
-#         if Bid.objects.filter(item=item_to_delete).exists():
-#             return Response(
-#                 {"detail": "Unable to delete an auction in progress."},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-
-#         item_to_delete.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+#

@@ -15,7 +15,7 @@ from items.serializers.common import ItemSerializer
 # from .serializers.populated import PopulatedBidSerializer
 
 
-class CreateBidView(APIView):
+class CreateBid(APIView):
     def post(self, request, item_id):
         """Create a new bid for an item"""
         try:

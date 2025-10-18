@@ -15,9 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from .views import CreateBidView
+from .views import CreateBid
 
 urlpatterns = [
-    # path('', CreateBidView.as_view()),
-    path('<int:item_id>/', CreateBidView.as_view()),
+    path('new/', CreateBid.as_view()),
 ]

@@ -3,6 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.contrib.auth import get_user_model
 from django.conf import settings # show secret key in settings.py
 import jwt
+from .models import BlackListedToken
 
 User = get_user_model()
 
@@ -22,6 +23,13 @@ class JWTAuthentication(BasicAuthentication): # assertain users permissions # re
 
         # pass all checks, store token in variable
         token = header.replace('Bearer ', '')
+
+        # check for BlackListedToken
+        try:
+            BlackListedToken.objects.get(token=token)
+            raise PermissionDenied(detail='Token has been revoked')
+        except BlackListedToken.DoesNotExist:
+            pass
 
         # get payload with users id from token & algorithms
         try:

@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     'items',
     'wallet',
     'corsheaders',
-    'phonenumber_field',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'

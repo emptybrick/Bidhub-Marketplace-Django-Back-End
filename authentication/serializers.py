@@ -14,28 +14,30 @@ class UserSerializer(serializers.ModelSerializer):
     password_confirmation = serializers.CharField(write_only=True)
 
     def validate(self, data):  # data comes from the request body
-        print('DATA', data)
-        # remove fields from request body and save to vars
-        password = data.pop('password')
-        password_confirmation = data.pop('password_confirmation')
+        # Only validate password if both password and password_confirmation are provided
+        if 'password' in data and 'password_confirmation' in data:
+            password = data.pop('password')
+            password_confirmation = data.pop('password_confirmation')
 
-        # check if they match
-        if password != password_confirmation:
-            raise ValidationError({'password_confirmation': 'do not match'})
+            # Check if passwords match
+            if password != password_confirmation:
+                raise ValidationError(
+                    {'password_confirmation': 'Passwords do not match'})
 
-        # checks if password is valid, review this out so it works
-        try:
-            password_validation.validate_password(password=password)
-        except ValidationError as err:
-            print('VALIDATION ERROR')
-            raise ValidationError({'password': err.messages})
+            # Validate password strength
+            try:
+                password_validation.validate_password(password=password)
+            except ValidationError as err:
+                raise ValidationError({'password': err.messages})
 
-        # hash the password, reassigning value on dict
-        data['password'] = make_password(password)
-
-        print('DATA ->', data)
+            # Hash the password
+            data['password'] = make_password(password)
+        elif 'password' in data or 'password_confirmation' in data:
+            # If only one of password or password_confirmation is provided, raise an error
+            raise ValidationError(
+                {'password_confirmation': 'Both password and password_confirmation are required'})
         return data
-
+        
     class Meta:
         model = User
         # We explicitly define fields rather than using fields="__all__" to control exactly what user data is exposed

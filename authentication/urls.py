@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RegisterView, LoginView, UserListView, UserView
+from .views import RegisterView, LoginView, UserListView, UserView, LogoutView
 
 urlpatterns = [
     # Auth endpoints
@@ -9,6 +9,7 @@ urlpatterns = [
     # User profile endpoints
     path('', UserListView.as_view()),
     path('<int:pk>/', UserView.as_view()),
+    path('logout/', LogoutView.as_view()),
 
     # path('profile/update/', ProfileUpdateView.as_view()),
 

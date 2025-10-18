@@ -20,7 +20,7 @@ class Bid(models.Model):
     item_id = models.ForeignKey(
         'items.Item',
         related_name="bids",
-        on_delete=models.CASCADE,
+        on_delete=models.PROTECT,
         blank=True,
         null=True  # if item is deleted, delete all associated bids too
     )

@@ -14,7 +14,8 @@ class Item(models.Model):
     owner = models.ForeignKey(
         "authentication.User",
         related_name="items",
-        on_delete=models.CASCADE
+        on_delete=models.SET_NULL,
+        null=True
     )
     category = models.CharField(choices=Item_Categories.choices(
     ), default=Item_Categories.MISCELLANEOUS.name, blank=False, null=False)
@@ -114,7 +115,7 @@ class Item(models.Model):
     highest_bidder = models.ForeignKey(
         "authentication.User",
         related_name="highest_bidder",
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )

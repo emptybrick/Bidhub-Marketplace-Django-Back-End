@@ -18,11 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  #  Django's built-in admin site mandatory
-    path('auth/', include('authentication.urls')),
-    path('bids/', include('bids.urls')),
-    path('items/', include('items.urls')),
-    path('reviews/', include('reviews.urls')),
-    path('wallet/', include('wallet.urls')),
-   
+    path('admin/', admin.site.urls),  # Django's built-in admin site mandatory
+    path('bidhub/auth/', include('authentication.urls')),
+    path('bidhub/marketplace/', include([
+        path('', include('items.urls')),
+        path('<int:item_id>/bids/', include('bids.urls')),
+    ])),
+    path('bidhub/seller/<int:seller_id>/reviews/', include('reviews.urls')),
+    # path('wallet/', include('wallet.urls')),
 ]
