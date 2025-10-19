@@ -38,10 +38,12 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173", 
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -81,7 +83,7 @@ DATABASES = {  # added this to use postgres as the database instead of the defau
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'bidhub',
         'HOST': 'localhost',
-        'PORT': 5433,
+        'PORT': os.getenv('PORT'),
         'USER': os.getenv('PROJECT_DB_USER'),
         'PASSWORD': os.getenv('PROJECT_DB_PASSWORD')
     }

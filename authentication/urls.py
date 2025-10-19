@@ -5,10 +5,10 @@ urlpatterns = [
     # Auth endpoints
     path('register/', RegisterView.as_view()),
     path('login/', LoginView.as_view()),
+    path('user/', UserView.as_view()),
 
     # User profile endpoints
     path('', UserListView.as_view()),
-    path('<int:pk>/', UserView.as_view()),
     path('logout/', LogoutView.as_view()),
 
     # path('profile/update/', ProfileUpdateView.as_view()),

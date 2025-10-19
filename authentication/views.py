@@ -52,6 +52,12 @@ class LoginView(APIView):
         )
         return Response({'token': token, 'message': f"Welcome back {user_to_login.username}"})
 
+class UserView(APIView):
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request):
+        serialized_user = UserSerializer(request.user)
+        return Response(serialized_user.data, status=status.HTTP_200_OK)
 
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -94,25 +100,7 @@ class UserListView(APIView):
 # GET Single User Profile
 
 
-class UserView(APIView):
-    # """View for retrieving user profile information"""
-    permission_classes = (IsAuthenticated,)
 
-    def get(self, request, pk):
-
-        # Check if user is requesting their own profile or has admin permissions
-        if str(request.user.id) == str(pk) or request.user.is_staff:
-            try:
-                user = get_user_model().objects.get(pk=pk)
-                serializer = UserSerializer(user)
-                return Response(serializer.data)
-            except get_user_model().DoesNotExist:
-                return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        else:
-            return Response(
-                {"detail": "You don't have permission to view this profile"},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
             # # PUT Update User Profile
             # class ProfileUpdateView(APIView):
