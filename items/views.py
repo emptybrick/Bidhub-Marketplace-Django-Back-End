@@ -19,6 +19,8 @@ from bids.serializer import BidSerializer
 #     page_size_query_param = 'page_size'
 #     max_page_size = 50
 
+# need to add pagination to itemlist view
+
 
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
