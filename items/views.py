@@ -14,6 +14,7 @@ from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from bids.serializer import BidSerializer
 
+
 class ItemPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
@@ -30,19 +31,21 @@ class ItemListView(APIView):
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
         print(request.query_params)
-        category = request.query_params.get('category', 'all') # Default to 'all'
+        category = request.query_params.get(
+            'category', 'all')  # Default to 'all'
         condition = request.query_params.get('condition', None)
-        owner = request.query_params.get('owner', None) # logic to filter by seller/user when needed
+        # logic to filter by seller/user when needed
+        owner = request.query_params.get('owner', None)
         sort_by = request.query_params.get('sort_by', "end_time")
 
-        items = Item.objects.all() # Return all items
-        
+        items = Item.objects.all()  # Return all items
+
         if category != 'all':
             items = items.filter(category=category)
         if condition != "all":
             items = items.filter(condition=condition)
         if owner:
-            items = items.filter(owner__id==owner) # need to test
+            items = items.filter(owner__id=owner)  # Correct
 
         if sort_by == 'current_bid':
             items = items.order_by('-current_bid')
