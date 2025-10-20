@@ -37,13 +37,17 @@ class ItemListView(APIView):
         sort_by_bid = request.query_params.get("bid", 'none')
         sort_by_start = request.query_params.get("start", 'none')
         sort_by_user_bids = request.query_params.get("userbids", 'none')
+        sort_by_user_favorites = request.query_params.get("favorites", 'none')
 
         user = request.user
+        favorites = user.favorites or []
 
         if sort_by_user_bids != 'none':
             user_bids = Bid.objects.filter(user_id=user).select_related('item_id').prefetch_related('item_id__bids')
             bidded_items = user_bids.values_list('item_id', flat=True).distinct()
             items = Item.objects.filter(id__in=bidded_items).select_related('owner')
+        elif sort_by_user_favorites != 'none':
+            items = Item.objects.filter(id__in=favorites)
         else:
             items = Item.objects.all()  # Return all items
 
