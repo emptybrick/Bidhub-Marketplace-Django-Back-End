@@ -96,6 +96,45 @@ class UserListView(APIView):
         serialized_users = UserSerializer(users, many=True)
 
         return Response(serialized_users.data, status=status.HTTP_200_OK)
+    
+
+class ToggleFavoriteView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        item_id = request.data.get('item_id')
+        print(item_id)
+        # Validate item_id
+        if not item_id:
+            return Response(
+                {'error': 'item_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Ensure item_id is string/int as needed
+            item_id = str(item_id)
+            request.user.toggle_favorite(item_id)
+
+            return Response({
+                'success': True,
+                'is_favorited': request.user.is_favorited(item_id),
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class FavoritesListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({
+            'favorites': request.user.favorites or [],
+        }, status=status.HTTP_200_OK)
 
 # GET Single User Profile
 

@@ -100,15 +100,6 @@ class Item(models.Model):
         null=False,
         db_index=True
     )
-    
-    # a list of bid id's - research how to format and cascade to delete when item is deleted
-    # bid_history = models.ForeignKey(
-    #     "bids.Bid",
-    #     related_name='items',
-    #     on_delete=models.CASCADE,
-    #     blank=True,
-    #     null=True
-    # )
 
     bid_history_json = models.JSONField(
         default=list, blank=True, null=True)  # New field

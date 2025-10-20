@@ -43,4 +43,4 @@ class UserSerializer(serializers.ModelSerializer):
         # We explicitly define fields rather than using fields="__all__" to control exactly what user data is exposed
         # This prevents accidentally exposing sensitive fields like password hash or security questions
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password', 'password_confirmation',
-                  'street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'wallet', 'user_rating')
+                  'street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'wallet', 'user_rating', 'favorites')
