@@ -18,13 +18,14 @@ class Item(models.Model):
         null=True
     )
     category = models.CharField(choices=Item_Categories.choices(
-    ), default=Item_Categories.MISCELLANEOUS.name, blank=False, null=False)
+    ), default=Item_Categories.MISCELLANEOUS.name, blank=False, null=False, db_index=True)
     condition = models.CharField(
         max_length=4,
         choices=[('USED', 'Used'), ('NEW', 'New')],
         default='NEW', 
         blank=False, 
-        null=False
+        null=False,
+        db_index=True
     )
 
     current_year = timezone.now().year
@@ -96,7 +97,8 @@ class Item(models.Model):
 
     end_time = models.DateTimeField(
         blank=False, 
-        null=False
+        null=False,
+        db_index=True
     )
     
     # a list of bid id's - research how to format and cascade to delete when item is deleted

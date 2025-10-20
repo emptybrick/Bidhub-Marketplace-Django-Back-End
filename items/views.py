@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
-# from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import PageNumberPagination
 # from django.utils import timezone
 # from django.db.models import Q, Count, Max, F, ExpressionWrapper, DurationField
 # from datetime import timedelta
@@ -14,29 +14,48 @@ from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from bids.serializer import BidSerializer
 
-# class ItemPagination(PageNumberPagination):
-#     page_size = 20
-#     page_size_query_param = 'page_size'
-#     max_page_size = 50
+class ItemPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 50
 
 # need to add pagination to itemlist view
 
 
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
-    # pagination_class = ItemPagination
+    pagination_class = ItemPagination
 
     # GET All Items
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
-        # Create base queryset
-        items = Item.objects.all()
+        print(request.query_params)
+        category = request.query_params.get('category', 'all') # Default to 'all'
+        condition = request.query_params.get('condition', None)
+        owner = request.query_params.get('owner', None) # logic to filter by seller/user when needed
+        sort_by = request.query_params.get('sort_by', "end_time")
 
-        # Use populated serializer if detailed=true is requested
-        if request.query_params.get('detailed') == 'true':
-            serialized_items = PopulatedItemSerializer(items, many=True)
-        else:
-            serialized_items = ItemSerializer(items, many=True)
+        items = Item.objects.all() # Return all items
+        
+        if category != 'all':
+            items = items.filter(category=category)
+        if condition != "all":
+            items = items.filter(condition=condition)
+        if owner:
+            items = items.filter(owner__id==owner) # need to test
+
+        if sort_by == 'current_bid':
+            items = items.order_by('-current_bid')
+        elif sort_by == 'end_time':
+            items = items.order_by('-end_time')
+
+        # paginator = self.pagination_class()
+        # page = paginator.paginate_queryset(items, request)
+        # serializer = ItemSerializer(page, many=True)
+
+        # return paginator.get_paginated_response(serializer.data)
+
+        serialized_items = ItemSerializer(items, many=True)
 
         return Response(serialized_items.data, status=status.HTTP_200_OK)
 
