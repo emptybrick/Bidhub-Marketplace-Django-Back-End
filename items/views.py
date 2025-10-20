@@ -36,8 +36,8 @@ class ItemListView(APIView):
         sort_by_end = request.query_params.get("end", 'none')
         sort_by_bid = request.query_params.get("bid", 'none')
         sort_by_start = request.query_params.get("start", 'none')
-        print(condition)
-
+        print(owner)
+        
 
         items = Item.objects.all()  # Return all items
 
@@ -46,7 +46,8 @@ class ItemListView(APIView):
         if condition != "all":
             items = items.filter(condition=condition)
         if owner != "none":
-            items = items.filter(owner.id==owner) # need to test
+            owner = int(owner)
+            items = items.filter(owner_id=owner)
 
         if sort_by_end != 'none':
             if sort_by_end == 'asc':
