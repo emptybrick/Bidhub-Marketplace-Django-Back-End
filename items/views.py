@@ -8,7 +8,7 @@ from rest_framework.pagination import PageNumberPagination
 # from datetime import timedelta
 
 from .models import Item
-# from bids.models import Bid  # Import Bid from the correct app
+from bids.models import Bid
 from .serializers.common import ItemSerializer
 from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -36,10 +36,16 @@ class ItemListView(APIView):
         sort_by_end = request.query_params.get("end", 'none')
         sort_by_bid = request.query_params.get("bid", 'none')
         sort_by_start = request.query_params.get("start", 'none')
-        print(owner)
-        
+        sort_by_user_bids = request.query_params.get("userbids", 'none')
 
-        items = Item.objects.all()  # Return all items
+        user = request.user
+
+        if sort_by_user_bids != 'none':
+            user_bids = Bid.objects.filter(user_id=user).select_related('item_id').prefetch_related('item_id__bids')
+            bidded_items = user_bids.values_list('item_id', flat=True).distinct()
+            items = Item.objects.filter(id__in=bidded_items).select_related('owner')
+        else:
+            items = Item.objects.all()  # Return all items
 
         if category != 'all':
             items = items.filter(category=category)
