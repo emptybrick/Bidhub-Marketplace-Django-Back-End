@@ -29,11 +29,14 @@ class ItemListView(APIView):
     # GET All Items
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
-        print(request.query_params)
         category = request.query_params.get('category', 'all') # Default to 'all'
-        condition = request.query_params.get('condition', None)
-        owner = request.query_params.get('owner', None) # logic to filter by seller/user when needed
-        sort_by = request.query_params.get('sort_by', "end_time")
+        condition = request.query_params.get('condition', 'none')
+        owner = request.query_params.get('owner', 'none') # logic to filter by seller/user when needed
+        sort_by_end = request.query_params.get("end", 'none')
+        sort_by_bid = request.query_params.get("bid", 'none')
+        sort_by_start = request.query_params.get("start", 'none')
+        print(condition)
+
 
         items = Item.objects.all() # Return all items
         
@@ -41,13 +44,24 @@ class ItemListView(APIView):
             items = items.filter(category=category)
         if condition != "all":
             items = items.filter(condition=condition)
-        if owner:
-            items = items.filter(owner__id==owner) # need to test
+        if owner != "none":
+            items = items.filter(owner.id==owner) # need to test
 
-        if sort_by == 'current_bid':
-            items = items.order_by('-current_bid')
-        elif sort_by == 'end_time':
-            items = items.order_by('-end_time')
+        if sort_by_end != 'none':
+            if sort_by_end == 'asc':
+                items = items.order_by("end_time")
+            elif sort_by_end == 'desc':
+                items = items.order_by("-end_time")
+        if sort_by_bid != 'none':
+            if sort_by_bid == 'asc':
+                items = items.order_by("current_bid")
+            elif sort_by_bid == 'desc':
+                items = items.order_by("-current_bid")
+        if sort_by_start != 'none':
+            if sort_by_start == 'asc':
+                items = items.order_by("start_time")
+            elif sort_by_start == 'desc':
+                items = items.order_by("-start_time")
 
         # paginator = self.pagination_class()
         # page = paginator.paginate_queryset(items, request)
