@@ -14,6 +14,7 @@ from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from bids.serializer import BidSerializer
 
+
 class ItemPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
@@ -38,8 +39,8 @@ class ItemListView(APIView):
         print(condition)
 
 
-        items = Item.objects.all() # Return all items
-        
+        items = Item.objects.all()  # Return all items
+
         if category != 'all':
             items = items.filter(category=category)
         if condition != "all":
