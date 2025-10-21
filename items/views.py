@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
-# from django.utils import timezone
+from django.utils import timezone
 # from django.db.models import Q, Count, Max, F, ExpressionWrapper, DurationField
 # from datetime import timedelta
 
@@ -30,26 +30,37 @@ class ItemListView(APIView):
     # GET All Items
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
-        category = request.query_params.get('category', 'all') # Default to 'all'
+        category = request.query_params.get(
+            'category', 'all')  # Default to 'all'
         condition = request.query_params.get('condition', 'none')
-        owner = request.query_params.get('owner', 'none') # logic to filter by seller/user when needed
+        # logic to filter by seller/user when needed
+        owner = request.query_params.get('owner', 'none')
         sort_by_end = request.query_params.get("end", 'none')
         sort_by_bid = request.query_params.get("bid", 'none')
         sort_by_start = request.query_params.get("start", 'none')
         sort_by_user_bids = request.query_params.get("userbids", 'none')
         sort_by_user_favorites = request.query_params.get("favorites", 'none')
-        
+        sort_by_purchased = request.query_params.get('purchased', 'false')
+
         user = request.user
 
         if request.user.is_anonymous != True:
             favorites = user.favorites or []
 
         if sort_by_user_bids != 'none':
-            user_bids = Bid.objects.filter(user_id=user).select_related('item_id').prefetch_related('item_id__bids')
-            bidded_items = user_bids.values_list('item_id', flat=True).distinct()
-            items = Item.objects.filter(id__in=bidded_items).select_related('owner')
+            user_bids = Bid.objects.filter(user_id=user).select_related(
+                'item_id').prefetch_related('item_id__bids')
+            bidded_items = user_bids.values_list(
+                'item_id', flat=True).distinct()
+            items = Item.objects.filter(
+                id__in=bidded_items).select_related('owner')
         elif sort_by_user_favorites != 'none':
             items = Item.objects.filter(id__in=favorites)
+        elif sort_by_purchased != 'false':
+            items = Item.objects.filter(
+                highest_bidder=user,
+                end_time__lt=timezone.now()
+            )
         else:
             items = Item.objects.all()  # Return all items
 
