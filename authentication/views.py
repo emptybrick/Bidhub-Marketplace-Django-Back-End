@@ -103,8 +103,6 @@ class ToggleFavoriteView(APIView):
 
     def post(self, request):
         item_id = request.data.get('item_id')
-        print(item_id)
-        # Validate item_id
         if not item_id:
             return Response(
                 {'error': 'item_id is required'},
@@ -112,7 +110,6 @@ class ToggleFavoriteView(APIView):
             )
 
         try:
-            # Ensure item_id is string/int as needed
             item_id = str(item_id)
             request.user.toggle_favorite(item_id)
 
