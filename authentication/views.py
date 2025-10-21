@@ -10,6 +10,7 @@ from django.conf import settings  # import our settings for our secret
 from .serializers import UserSerializer
 from .models import User, BlackListedToken
 import jwt  # import jwt
+from items.models import Item
 
 User = get_user_model()  # Save user model to User var
 
@@ -103,13 +104,21 @@ class ToggleFavoriteView(APIView):
 
     def post(self, request):
         item_id = request.data.get('item_id')
+        
+        # Validate item_id
         if not item_id:
             return Response(
                 {'error': 'item_id is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
+        item = Item.objects.get(pk=str(item_id))
+        if item.owner == request.user:
+            return Response(
+                {'error': 'Can not favorite your own item.'},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
         try:
+            # Ensure item_id is string/int as needed
             item_id = str(item_id)
             request.user.toggle_favorite(item_id)
 
