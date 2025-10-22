@@ -17,8 +17,15 @@ User = get_user_model()  # Save user model to User var
 
 class RegisterView(APIView):
 
+
     def post(self, request):
-        user_to_create = UserSerializer(data=request.data)
+        data = request.data.copy()  # make mutable copy
+        # Remove/convert empty numeric fields so DecimalField won't receive ""
+        for key in ("wallet", "user_rating"):
+            if key in data and (data.get(key) == "" or data.get(key) is None):
+                data.pop(key, None)
+
+        user_to_create = UserSerializer(data=data)
         print('USER CREATE', user_to_create)
         if user_to_create.is_valid():
             user_to_create.save()
@@ -53,12 +60,14 @@ class LoginView(APIView):
         )
         return Response({'token': token, 'message': f"Welcome back {user_to_login.username}"})
 
+
 class UserView(APIView):
     permission_classes = (IsAuthenticated, )
 
     def get(self, request):
         serialized_user = UserSerializer(request.user)
         return Response(serialized_user.data, status=status.HTTP_200_OK)
+
 
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -97,14 +106,14 @@ class UserListView(APIView):
         serialized_users = UserSerializer(users, many=True)
 
         return Response(serialized_users.data, status=status.HTTP_200_OK)
-    
+
 
 class ToggleFavoriteView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
         item_id = request.data.get('item_id')
-        
+
         # Validate item_id
         if not item_id:
             return Response(
@@ -143,18 +152,14 @@ class FavoritesListView(APIView):
         }, status=status.HTTP_200_OK)
 
 # GET Single User Profile
+        # # PUT Update User Profile
+        # class ProfileUpdateView(APIView):
+        #     permission_classes = (IsAuthenticated,)
 
-
-
-
-            # # PUT Update User Profile
-            # class ProfileUpdateView(APIView):
-            #     permission_classes = (IsAuthenticated,)
-
-            #     def put(self, request):
-            #         user = request.user
-            #         serializer = UserSerializer(user, data=request.data, partial=True)
-            #         if serializer.is_valid():
-            #             serializer.save()
-            #             return Response(serializer.data)
-            #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        #     def put(self, request):
+        #         user = request.user
+        #         serializer = UserSerializer(user, data=request.data, partial=True)
+        #         if serializer.is_valid():
+        #             serializer.save()
+        #             return Response(serializer.data)
+        #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
