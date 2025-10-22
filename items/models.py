@@ -115,4 +115,4 @@ class Item(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # images = models.JSONField(default=list, blank=True) # on hold
+    images = models.JSONField(default=list, blank=True) # on hold
