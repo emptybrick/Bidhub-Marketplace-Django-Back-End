@@ -64,6 +64,10 @@ class ItemListView(APIView):
         else:
             items = Item.objects.all()  # Return all items
 
+        # filter out all items that auction has ended
+        if sort_by_purchased == 'false':
+            items = items.filter(end_time__gt=timezone.now())
+
         if category != 'all':
             items = items.filter(category=category)
         if condition != "all":
@@ -87,6 +91,8 @@ class ItemListView(APIView):
                 items = items.order_by("start_time")
             elif sort_by_start == 'desc':
                 items = items.order_by("-start_time")
+        # filter out all items that auction has ended
+        items = items.filter(end_time__gt=timezone.now())
 
         # paginator = self.pagination_class()
         # page = paginator.paginate_queryset(items, request)
