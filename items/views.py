@@ -4,8 +4,6 @@ from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from django.utils import timezone
-# from django.db.models import Q, Count, Max, F, ExpressionWrapper, DurationField
-# from datetime import timedelta
 
 from .models import Item
 from bids.models import Bid
@@ -19,8 +17,6 @@ class ItemPagination(PageNumberPagination):
     page_size = 20
     page_size_query_param = 'page_size'
     max_page_size = 50
-
-# need to add pagination to itemlist view
 
 
 class ItemListView(APIView):

@@ -72,6 +72,12 @@ class User(AbstractUser):  # we extend the AbstractUser and add the fields that 
     )
     favorites = models.JSONField(
         default=list, blank=True, null=True)
+    
+    profile_image = models.CharField(blank=True, null=True)
+    
+    items_sold = models.IntegerField(blank=True, null=True)
+
+    date_joined = models.DateTimeField(auto_now_add=True)
 
     def add_favorite(self, item_id):
         """Add item_id to favorites if not already present"""
