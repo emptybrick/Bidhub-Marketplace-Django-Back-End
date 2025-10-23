@@ -109,8 +109,6 @@ class LogoutView(APIView):
         )
 
 # GET All Users - Admin Only & Development
-
-
 class UserListView(APIView):
     #    """View for retrieving user profile information"""
     permission_classes = (IsAuthenticatedOrReadOnly,)
