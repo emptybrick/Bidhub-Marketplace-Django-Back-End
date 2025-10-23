@@ -22,7 +22,8 @@ class ItemPagination(PageNumberPagination):
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = ItemPagination
-    
+    allowed_page_sizes = [5, 10, 20]  # allowed choices for page_size
+
     # GET All Items
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
@@ -70,7 +71,7 @@ class ItemListView(APIView):
             )
         elif sort_by_purchased == 'false':
             items = items.filter(end_time__gt=timezone.now())
-            
+
         if category != 'all':
             items = items.filter(category=category)
         if condition != "all":
@@ -95,15 +96,25 @@ class ItemListView(APIView):
             elif sort_by_start == 'desc':
                 items = items.order_by("-start_time")
 
-        # paginator = self.pagination_class()
-        # page = paginator.paginate_queryset(items, request)
-        # serializer = ItemSerializer(page, many=True)
+        # sanitize page_size param and apply allowed sizes
+        page_size_param = request.query_params.get('page_size')
+        if page_size_param:
+            try:
+                page_size_val = int(page_size_param)
+            except ValueError:
+                page_size_val = None
+            if page_size_val not in self.allowed_page_sizes:
+                page_size_val = None
+        else:
+            page_size_val = None
 
-        # return paginator.get_paginated_response(serializer.data)
+        paginator = self.pagination_class()
+        if page_size_val:
+            paginator.page_size = page_size_val
 
-        serialized_items = ItemSerializer(items, many=True)
-
-        return Response(serialized_items.data, status=status.HTTP_200_OK)
+        page = paginator.paginate_queryset(items, request, view=self)
+        serializer = ItemSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class CreateItem(APIView):
