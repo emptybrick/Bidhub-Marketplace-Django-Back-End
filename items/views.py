@@ -31,6 +31,7 @@ class ItemListView(APIView):
         condition = request.query_params.get('condition', 'none')
         # logic to filter by seller/user when needed
         owner = request.query_params.get('owner', 'none')
+        sort_by_sold = request.query_params.get("sold", 'false')
         sort_by_end = request.query_params.get("end", 'none')
         sort_by_bid = request.query_params.get("bid", 'none')
         sort_by_start = request.query_params.get("start", 'none')
@@ -56,12 +57,20 @@ class ItemListView(APIView):
                 highest_bidder=user,
                 end_time__lt=timezone.now()
             )
+
         else:
             items = Item.objects.all()  # Return all items
 
-        # filter out all items that auction has ended
-        if sort_by_purchased == 'false':
+        # filter out all items that auction has ended if not sort_by_sold
+        if sort_by_sold != "false":
+            items = Item.objects.filter(
+                owner=user,
+                highest_bidder__isnull=False,
+                end_time__lt=timezone.now()
+            )
+        elif sort_by_purchased == 'false':
             items = items.filter(end_time__gt=timezone.now())
+            
         if category != 'all':
             items = items.filter(category=category)
         if condition != "all":
