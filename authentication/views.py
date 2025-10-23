@@ -15,13 +15,30 @@ from items.models import Item
 
 User = get_user_model()  # Save user model to User var
 
-
 class UserView(APIView):
     permission_classes = (IsAuthenticated, )
 
     def get(self, request):
         serialized_user = UserSerializer(request.user)
         return Response(serialized_user.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        """Full update of the authenticated user"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        """Partial update of the authenticated user"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RegisterView(APIView):
@@ -89,6 +106,50 @@ class LogoutView(APIView):
             {"message": "No valid token Found"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class ToggleFavoriteView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        item_id = request.data.get('item_id')
+
+        # Validate item_id
+        if not item_id:
+            return Response(
+                {'error': 'item_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        item = Item.objects.get(pk=str(item_id))
+        if item.owner == request.user:
+            return Response(
+                {'error': 'Can not favorite your own item.'},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+        try:
+            # Ensure item_id is string/int as needed
+            item_id = str(item_id)
+            request.user.toggle_favorite(item_id)
+
+            return Response({
+                'success': True,
+                'is_favorited': request.user.is_favorited(item_id),
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class FavoritesListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({
+            'favorites': request.user.favorites or [],
+        }, status=status.HTTP_200_OK)
 
 
 class BuyerShippingView(APIView):
@@ -197,16 +258,3 @@ class FavoritesListView(APIView):
             'favorites': request.user.favorites or [],
         }, status=status.HTTP_200_OK)
 
-
-# GET Single User Profile
-        # PUT Update User Profile
-    # class ProfileUpdateView(APIView):
-    #         permission_classes = (IsAuthenticated,)
-
-    #         def put(self, request):
-    #             user = request.user
-    #             serializer = UserSerializer(user, data=request.data, partial=True)
-    #             if serializer.is_valid():
-    #                 serializer.save()
-    #                 return Response(serializer.data)
-    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
