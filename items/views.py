@@ -22,7 +22,7 @@ class ItemPagination(PageNumberPagination):
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = ItemPagination
-
+    
     # GET All Items
     def get(self, request):
         """Get filtered list of items with comprehensive search options"""
@@ -37,7 +37,6 @@ class ItemListView(APIView):
         sort_by_user_bids = request.query_params.get("userbids", 'false')
         sort_by_user_favorites = request.query_params.get("favorites", 'false')
         sort_by_purchased = request.query_params.get('purchased', 'false')
-
         user = request.user
 
         if request.user.is_anonymous != True:
@@ -53,20 +52,16 @@ class ItemListView(APIView):
         elif sort_by_user_favorites != 'false':
             items = Item.objects.filter(id__in=favorites)
         elif sort_by_purchased != 'false':
-            print('filtering purchased')
             items = Item.objects.filter(
                 highest_bidder=user,
                 end_time__lt=timezone.now()
             )
-            print(items)
         else:
             items = Item.objects.all()  # Return all items
 
         # filter out all items that auction has ended
         if sort_by_purchased == 'false':
-            print('filtering out ended auctions')
             items = items.filter(end_time__gt=timezone.now())
-
         if category != 'all':
             items = items.filter(category=category)
         if condition != "all":
