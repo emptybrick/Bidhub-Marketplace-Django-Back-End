@@ -2,7 +2,7 @@ from django.db import models
 # user model that already exists in django
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator
-
+from decimal import Decimal
 
 class User(AbstractUser):  # we extend the AbstractUser and add the fields that we want for our users
     username = models.CharField(
@@ -68,7 +68,7 @@ class User(AbstractUser):  # we extend the AbstractUser and add the fields that 
         null=True,
         max_digits=3,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)]
+        validators=[MinValueValidator(Decimal('0.01'))]
     )
     favorites = models.JSONField(
         default=list, blank=True, null=True)
