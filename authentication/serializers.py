@@ -8,6 +8,7 @@ User = get_user_model()
 
 # never converted to json and returned in response
 
+
 class UserSerializer(serializers.ModelSerializer):
     # write_only=True ensures never sent back in JSON
     password = serializers.CharField(write_only=True)
@@ -37,10 +38,20 @@ class UserSerializer(serializers.ModelSerializer):
             raise ValidationError(
                 {'password_confirmation': 'Both password and password_confirmation are required'})
         return data
-        
+
     class Meta:
         model = User
-        # We explicitly define fields rather than using fields="__all__" to control exactly what user data is exposed
-        # This prevents accidentally exposing sensitive fields like password hash or security questions
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password', 'password_confirmation',
-                  'street_address', 'city', 'state', 'postal_code', 'country', 'phone_number', 'wallet', 'user_rating', 'favorites')
+        fields = (
+            'id', 'email', 'username', 'first_name', 'last_name',
+            'street_address', 'city', 'state', 'postal_code', 'country',
+            'phone_number', 'wallet', 'user_rating', 'favorites',
+            'password', 'password_confirmation'
+        )
+        read_only_fields = ('id', 'user_rating', 'email', 'username')
+
+
+class BuyerShippingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'street_address', 'city', 'state',
+                  'postal_code', 'country', 'phone_number')

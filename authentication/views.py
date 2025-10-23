@@ -1,13 +1,13 @@
 from rest_framework.views import APIView  # main API controller class
 # response class, like res object in express
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from datetime import datetime, timedelta  # creates timestamps in dif formats
+from datetime import datetime, timedelta, timezone  # creates timestamps in dif formats
 from django.contrib.auth import get_user_model  # gets user model we are using
 from django.conf import settings  # import our settings for our secret
-from .serializers import UserSerializer
+from .serializers import UserSerializer, BuyerShippingSerializer
 from .models import User, BlackListedToken
 import jwt  # import jwt
 from items.models import Item
@@ -150,6 +150,38 @@ class FavoritesListView(APIView):
         return Response({
             'favorites': request.user.favorites or [],
         }, status=status.HTTP_200_OK)
+    
+
+class BuyerShippingView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, item_id):
+        try:
+            item = Item.objects.get(pk=item_id)
+            # Check if the requester is the seller and the auction has ended
+            if item.owner != request.user:
+                return Response(
+                    {"detail": "You can only access buyer info for items you sold"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            if item.end_time >= timezone.now():
+                return Response(
+                    {"detail": "Auction has not ended yet"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if not item.highest_bidder:
+                return Response(
+                    {"detail": "No buyer for this item"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            # Serialize the buyer's shipping info
+            serializer = BuyerShippingSerializer(item.highest_bidder)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Item.DoesNotExist:
+            return Response(
+                {"detail": "Item not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 # GET Single User Profile
         # # PUT Update User Profile
