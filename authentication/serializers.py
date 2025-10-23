@@ -61,12 +61,12 @@ class BuyerShippingSerializer(serializers.ModelSerializer):
 class UsernameSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username',)
+        fields = ('id', 'username',)
         read_only_fields = ('id', 'username')
 
 class SellerProfileViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'user_rating', 'items_sold', "date_joined")
+        fields = ('id', 'username', 'user_rating', 'items_sold', "date_joined")
         read_only_fields = ('id', 'username', 'user_rating',
                             'items_sold', "date_joined")

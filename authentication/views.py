@@ -235,7 +235,7 @@ class ToggleFavoriteView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         item = Item.objects.get(pk=str(item_id))
-        if item.owner == request.user.id:
+        if item.owner.id == request.user.id:
             return Response(
                 {'error': 'Can not favorite your own item.'},
                 status=status.HTTP_406_NOT_ACCEPTABLE
