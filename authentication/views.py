@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from datetime import datetime, timedelta, timezone  # creates timestamps in dif formats
+# creates timestamps in dif formats
+from datetime import datetime, timedelta, timezone
 from django.contrib.auth import get_user_model  # gets user model we are using
 from django.conf import settings  # import our settings for our secret
 from .serializers import UserSerializer, BuyerShippingSerializer
@@ -16,7 +17,6 @@ User = get_user_model()  # Save user model to User var
 
 
 class RegisterView(APIView):
-
 
     def post(self, request):
         data = request.data.copy()  # make mutable copy
@@ -67,6 +67,24 @@ class UserView(APIView):
     def get(self, request):
         serialized_user = UserSerializer(request.user)
         return Response(serialized_user.data, status=status.HTTP_200_OK)
+
+    def put(self, request):
+        """Full update of the authenticated user"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        """Partial update of the authenticated user"""
+        user = request.user
+        serializer = UserSerializer(user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LogoutView(APIView):
@@ -150,7 +168,7 @@ class FavoritesListView(APIView):
         return Response({
             'favorites': request.user.favorites or [],
         }, status=status.HTTP_200_OK)
-    
+
 
 class BuyerShippingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
