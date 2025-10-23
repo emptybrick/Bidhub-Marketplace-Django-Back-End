@@ -10,12 +10,6 @@ class Review(models.Model):
         decimal_places=1,
         validators=[MinValueValidator(0.1)]
     )
-    # item_id = models.ForeignKey( # remove before deploy
-    #     'items.Item',
-    #     related_name="reviews",
-    #     on_delete=models.SET_NULL,
-    #     null=True
-    # )
     seller_id = models.ForeignKey(
         'authentication.User',
         related_name="seller_reviews",

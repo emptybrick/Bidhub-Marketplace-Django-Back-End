@@ -47,7 +47,7 @@ class UserSerializer(serializers.ModelSerializer):
             'phone_number', 'wallet', 'user_rating', 'favorites',
             'password', 'password_confirmation', 'items_sold', "date_joined"
         )
-        read_only_fields = ('id', 'user_rating', 'email', 'username')
+        read_only_fields = ('id', 'email', 'username')
 
 
 class BuyerShippingSerializer(serializers.ModelSerializer):

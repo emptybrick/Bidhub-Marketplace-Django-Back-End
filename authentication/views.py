@@ -5,7 +5,8 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 # creates timestamps in dif formats
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
+from django.utils import timezone
 from django.contrib.auth import get_user_model  # gets user model we are using
 from django.conf import settings  # import our settings for our secret
 from .serializers import UserSerializer, BuyerShippingSerializer, SellerProfileViewSerializer, UsernameSerializer
@@ -190,9 +191,15 @@ class SellerProfileView(APIView):
     def get(self, request, seller_id):
         try:
             # need to get items seller sold
+            items_sold = Item.objects.filter(
+                owner_id=seller_id,
+                highest_bidder__isnull=False,
+                end_time__lt=timezone.now()
+            ).count()
             seller = User.objects.get(pk=seller_id)
-            serialized_user = SellerProfileViewSerializer(request.user)
-            return Response(serialized_user.data, status=status.HTTP_200_OK)
+            seller.items_sold=items_sold
+            serialized_data = SellerProfileViewSerializer(seller)
+            return Response(serialized_data.data, status=status.HTTP_200_OK)
         except seller.DoesNotExist:
             return Response(
                 {"detail": "Seller not found."},
@@ -206,7 +213,7 @@ class UsernameView(APIView):
     def get(self, request, seller_id):
         try:
             seller = User.objects.get(pk=seller_id)
-            serialized_user = UsernameSerializer(request.user)
+            serialized_user = UsernameSerializer(seller)
             return Response(serialized_user.data, status=status.HTTP_200_OK)
         except seller.DoesNotExist:
             return Response(
