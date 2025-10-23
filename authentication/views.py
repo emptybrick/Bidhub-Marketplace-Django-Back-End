@@ -1,8 +1,8 @@
-from rest_framework.views import APIView  # main API controller class
-# response class, like res object in express
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 # creates timestamps in dif formats
 from datetime import datetime, timedelta
@@ -15,6 +15,7 @@ import jwt  # import jwt
 from items.models import Item
 
 User = get_user_model()  # Save user model to User var
+
 
 class UserView(APIView):
     permission_classes = (IsAuthenticated, )
@@ -214,7 +215,7 @@ class SellerProfileView(APIView):
                 end_time__lt=timezone.now()
             ).count()
             seller = User.objects.get(pk=seller_id)
-            seller.items_sold=items_sold
+            seller.items_sold = items_sold
             serialized_data = SellerProfileViewSerializer(seller)
             return Response(serialized_data.data, status=status.HTTP_200_OK)
         except seller.DoesNotExist:
@@ -281,4 +282,3 @@ class FavoritesListView(APIView):
         return Response({
             'favorites': request.user.favorites or [],
         }, status=status.HTTP_200_OK)
-
