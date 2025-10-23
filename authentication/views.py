@@ -2,12 +2,13 @@ from rest_framework.views import APIView  # main API controller class
 # response class, like res object in express
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from datetime import datetime, timedelta, timezone  # creates timestamps in dif formats
+# creates timestamps in dif formats
+from datetime import datetime, timedelta, timezone
 from django.contrib.auth import get_user_model  # gets user model we are using
 from django.conf import settings  # import our settings for our secret
-from .serializers import UserSerializer, BuyerShippingSerializer
+from .serializers import UserSerializer, BuyerShippingSerializer, SellerProfileViewSerializer, UsernameSerializer
 from .models import User, BlackListedToken
 import jwt  # import jwt
 from items.models import Item
@@ -15,8 +16,15 @@ from items.models import Item
 User = get_user_model()  # Save user model to User var
 
 
-class RegisterView(APIView):
+class UserView(APIView):
+    permission_classes = (IsAuthenticated, )
 
+    def get(self, request):
+        serialized_user = UserSerializer(request.user)
+        return Response(serialized_user.data, status=status.HTTP_200_OK)
+
+
+class RegisterView(APIView):
 
     def post(self, request):
         data = request.data.copy()  # make mutable copy
@@ -61,14 +69,6 @@ class LoginView(APIView):
         return Response({'token': token, 'message': f"Welcome back {user_to_login.username}"})
 
 
-class UserView(APIView):
-    permission_classes = (IsAuthenticated, )
-
-    def get(self, request):
-        serialized_user = UserSerializer(request.user)
-        return Response(serialized_user.data, status=status.HTTP_200_OK)
-
-
 class LogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -90,67 +90,6 @@ class LogoutView(APIView):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-# GET All Users - Admin Only & Development
-
-
-class UserListView(APIView):
-    #    """View for retrieving user profile information"""
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-
-    def get(self, request):
-        """Get all users for testing purposes"""
-        # Create base queryset
-        users = User.objects.all()
-
-        # Use populated serializer if detailed=true is requested
-        serialized_users = UserSerializer(users, many=True)
-
-        return Response(serialized_users.data, status=status.HTTP_200_OK)
-
-
-class ToggleFavoriteView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def post(self, request):
-        item_id = request.data.get('item_id')
-
-        # Validate item_id
-        if not item_id:
-            return Response(
-                {'error': 'item_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        item = Item.objects.get(pk=str(item_id))
-        if item.owner == request.user:
-            return Response(
-                {'error': 'Can not favorite your own item.'},
-                status=status.HTTP_406_NOT_ACCEPTABLE
-            )
-        try:
-            # Ensure item_id is string/int as needed
-            item_id = str(item_id)
-            request.user.toggle_favorite(item_id)
-
-            return Response({
-                'success': True,
-                'is_favorited': request.user.is_favorited(item_id),
-            }, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-
-class FavoritesListView(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def get(self, request):
-        return Response({
-            'favorites': request.user.favorites or [],
-        }, status=status.HTTP_200_OK)
-    
 
 class BuyerShippingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -183,15 +122,91 @@ class BuyerShippingView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-# GET Single User Profile
-        # # PUT Update User Profile
-        # class ProfileUpdateView(APIView):
-        #     permission_classes = (IsAuthenticated,)
 
-        #     def put(self, request):
-        #         user = request.user
-        #         serializer = UserSerializer(user, data=request.data, partial=True)
-        #         if serializer.is_valid():
-        #             serializer.save()
-        #             return Response(serializer.data)
-        #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class SellerProfileView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request, seller_id):
+        try:
+            # need to get items seller sold
+            seller = User.objects.get(pk=seller_id)
+            serialized_user = SellerProfileViewSerializer(request.user)
+            return Response(serialized_user.data, status=status.HTTP_200_OK)
+        except seller.DoesNotExist:
+            return Response(
+                {"detail": "Seller not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class UsernameView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request, seller_id):
+        try:
+            seller = User.objects.get(pk=seller_id)
+            serialized_user = UsernameSerializer(request.user)
+            return Response(serialized_user.data, status=status.HTTP_200_OK)
+        except seller.DoesNotExist:
+            return Response(
+                {"detail": "Seller not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class ToggleFavoriteView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        item_id = request.data.get('item_id')
+
+        # Validate item_id
+        if not item_id:
+            return Response(
+                {'error': 'item_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        item = Item.objects.get(pk=str(item_id))
+        if item.owner == request.user.id:
+            return Response(
+                {'error': 'Can not favorite your own item.'},
+                status=status.HTTP_406_NOT_ACCEPTABLE
+            )
+        try:
+            # Ensure item_id is string/int as needed
+            item_id = str(item_id)
+            request.user.toggle_favorite(item_id)
+
+            return Response({
+                'success': True,
+                'is_favorited': request.user.is_favorited(item_id),
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class FavoritesListView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({
+            'favorites': request.user.favorites or [],
+        }, status=status.HTTP_200_OK)
+
+
+# GET Single User Profile
+        # PUT Update User Profile
+    # class ProfileUpdateView(APIView):
+    #         permission_classes = (IsAuthenticated,)
+
+    #         def put(self, request):
+    #             user = request.user
+    #             serializer = UserSerializer(user, data=request.data, partial=True)
+    #             if serializer.is_valid():
+    #                 serializer.save()
+    #                 return Response(serializer.data)
+    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
