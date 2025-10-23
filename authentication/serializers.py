@@ -45,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'email', 'username', 'first_name', 'last_name',
             'street_address', 'city', 'state', 'postal_code', 'country',
             'phone_number', 'wallet', 'user_rating', 'favorites',
-            'password', 'password_confirmation'
+            'password', 'password_confirmation', 'items_sold', "date_joined"
         )
         read_only_fields = ('id', 'user_rating', 'email', 'username')
 
@@ -55,3 +55,18 @@ class BuyerShippingSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name', 'street_address', 'city', 'state',
                   'postal_code', 'country', 'phone_number')
+        read_only_fields = ('id', 'user_rating', 'email', 'username')
+
+
+class UsernameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username',)
+        read_only_fields = ('id', 'username')
+
+class SellerProfileViewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'user_rating', 'items_sold', "date_joined")
+        read_only_fields = ('id', 'username', 'user_rating',
+                            'items_sold', "date_joined")

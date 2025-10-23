@@ -77,9 +77,10 @@ class CreateReview(APIView):
 
         # check if user has permission to leave review by comparing author,
         # highest_bidder, and making sure auction has ended
+        
         if not Item.objects.filter(
-            owner=seller,
-            highest_bidder=request.user,
+            owner_id=seller.id,
+            highest_bidder_id=request.user.id,
             end_time__lt=timezone.now()
         ).exists():
             return Response(
@@ -89,7 +90,8 @@ class CreateReview(APIView):
 
         # Check if user has already reviewed the seller
         reviews_by_user = Review.objects.filter(
-            author=request.user)
+            author=request.user
+            )
         if reviews_by_user.exists():
             return Response(
                 {"detail": "You have already reviewed this seller."},
