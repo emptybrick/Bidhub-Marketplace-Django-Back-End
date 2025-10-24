@@ -7,9 +7,9 @@ from django.utils import timezone
 
 from .models import Item
 from bids.models import Bid
-from .serializers.common import ItemSerializer
+from .serializers.common import ItemSerializer, ShippingAndPaymentSerializer
 from .serializers.populated import PopulatedItemSerializer
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from bids.serializer import BidSerializer
 
 
@@ -134,8 +134,8 @@ class CreateItem(APIView):
 
 
 class ItemDetailView(APIView):
-    # both authenticated and unauthenticated users can view item details
-    permission_classes = (IsAuthenticatedOrReadOnly,)
+    # only authenticated users can view item details
+    permission_classes = (IsAuthenticated,)
 
     # GET item
     def get_item(self, pk):
@@ -200,132 +200,36 @@ class ItemDetailView(APIView):
         item_to_delete.delete()
         return Response({"detail": "Item has been successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
-        # item.bid_history = getAll bids by bid.item_id then sort asc(highest bid first) then BidSerializer(item.bid_history)
+class UpdateShippingAndPaymentView(APIView):
+    permission_classes = (IsAuthenticated,)
 
-        # Bid information
-        # need to include bid.user_id to populate username and then only show first and last char with 3 *'s
-        # bids = Bid.objects.filter(item=item)
-        # data['bid_count'] = bids.count()
+    def get_item(self, pk):
+        """Helper method to get an item by ID"""
+        try:
+            return Item.objects.get(pk=pk)
+        except Item.DoesNotExist:
+            raise NotFound(detail="Item not found")
 
-        # highest_bid = bids.order_by('-amount').first()
-        # if highest_bid:
-        #     data['highest_bid'] = highest_bid.amount
-        #     data['highest_bidder'] = highest_bid.bidder.id
-        # else:
-        #     data['highest_bid'] = None
-        #     data['highest_bidder'] = None
+    def put(self, request, item_id):
+        """Update an item"""
+        item_to_update = self.get_item(pk=item_id)
 
-        # # Basic filtering
-        # category = request.query_params.get('category')
-        # if category:
-        #     items = items.filter(category=category)
+        # check if auction has ended
+        if item_to_update.end_time >= timezone.now():
+            return Response({"detail": "Item auction is still in progress."}, status=status.HTTP_412_PRECONDITION_FAILED)
 
-        # # Price range filtering
-        # # filter by current bid - item.current_bid
-        # min_price = request.query_params.get('min_price')
-        # if min_price and min_price.isdigit():
-        #     items = items.filter(starting_price__gte=float(min_price))
+        # check if user is highest bidder (winner)
+        if item_to_update.highest_bidder is not None and item_to_update.highest_bidder != request.user:
+            return Response({"detail": "You are not authorized to update this item."}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # max_price = request.query_params.get('max_price')
-        # if max_price and max_price.isdigit():
-        #     items = items.filter(starting_price__lte=float(max_price))
+        shipping_info = request.data.get('shipping_info', {})
+        payment_confirmation = request.data.get('payment_confirmation')
 
-        # # Text search
-        # search_term = request.query_params.get('search')
-        # if search_term:
-        #     items = items.filter(
-        #         Q(title__icontains=search_term) |
-        #         Q(description__icontains=search_term)
-        #     )
-
-        # # Auction status filtering
-        # # filter by item.end_time
-        # # there is no logic for status currently need to create, auction is not used in models
-        # auction_status = request.query_params.get('status')
-        # now = timezone.now()
-        # if auction_status == 'active':
-        #     items = items.filter(Q(end_time__gt=now) |
-        #                          Q(end_time__isnull=True))
-        # elif auction_status == 'ended':
-        #     items = items.filter(end_time__lte=now)
-        # elif auction_status == 'ending_soon':
-        #     items = items.filter(end_time__gt=now,
-        #                          end_time__lt=now + timedelta(hours=24))
-
-        # # Condition filtering
-        # condition = request.query_params.get('condition')
-        # if condition:
-        #     items = items.filter(condition=condition)
-
-        # # Add bid information via annotation
-        # items = items.annotate(
-        #     bid_count=Count('bids'),
-        #     highest_bid=Max('bids__amount')
-        # )
-
-        # # Sorting
-        # sort_by = request.query_params.get('sort', 'created_at')
-        # # starting_price = initial_bid, end_time = end_time, highest_bid = current_bid
-        # valid_sort_fields = ['created_at', 'starting_price',
-        #                      'end_time', 'highest_bid', 'bid_count']
-
-        # if sort_by not in valid_sort_fields:
-        #     sort_by = 'created_at'
-
-        # # Handle special sort cases
-        # # there is no logic for time_remaining or status, auction is not used in models
-        # # sort by end_time asc, desc
-        # if sort_by == 'time_remaining' and auction_status != 'ended':
-        #     # Sort by time left in auction
-        #     items = items.filter(end_time__isnull=False)
-        #     items = items.annotate(
-        #         time_left=ExpressionWrapper(
-        #             F('end_time') - timezone.now(), output_field=DurationField())
-        #     )
-        #     sort_by = 'time_left'
-
-        # # Apply sort direction
-        # sort_dir = request.query_params.get('direction', 'desc').lower()
-        # if sort_dir == 'desc' and sort_by != 'time_left':
-        #     sort_by = f'-{sort_by}'
-        # elif sort_dir == 'asc' and sort_by == 'time_left':
-        #     # Invert for time_left to make "ending soon" first
-        #     sort_by = f'-{sort_by}'
-
-        # items = items.order_by(sort_by)
-
-        # # Apply pagination
-        # paginator = self.pagination_class()
-        # page = paginator.paginate_queryset(items, request)
-
-        # Get related items (same category or owner)
-        # why pull related items by category in detailed view
-        # related_items = Item.objects.filter(Q(owner=item.owner)).exclude(pk=pk)[:5]  # Limit to 5 item
-
-        # # Auction status information
-        # now = timezone.now()
-        # data['auction_active'] = True if not item.end_time or item.end_time > now else False
-
-        # if item.end_time:
-        #     if item.end_time > now:
-        #         # Calculate time remaining and format it
-        #         # we only want to show a relative end time, only show ends in 2 days 1 day, ends today
-        #         time_remaining = item.end_time - now
-        #         days, remainder = divmod(time_remaining.total_seconds(), 86400)
-        #         hours, remainder = divmod(remainder, 3600)
-        #         minutes = divmod(remainder, 60)[0]
-
-        #         data['time_remaining'] = {
-        #             'days': int(days),
-        #             'hours': int(hours),
-        #             'minutes': int(minutes),
-        #             'total_seconds': time_remaining.total_seconds()
-        #         }
-        #     else:
-        #         data['time_remaining'] = None
-
-        # # Related items
-        # data['related_items'] = ItemSerializer(related_items, many=True).data
-
-
-#
+        serializer = ShippingAndPaymentSerializer(
+            item_to_update, data={'shipping_info': shipping_info, 'payment_confirmation': payment_confirmation}, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Shipping information updated successfully.", "data": serializer.data},
+                            status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

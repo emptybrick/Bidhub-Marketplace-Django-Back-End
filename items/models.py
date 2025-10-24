@@ -4,6 +4,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 # from datetime import datetime
 from django.utils import timezone
 
+
 class Item(models.Model):
     item_name = models.CharField(
         max_length=80,
@@ -22,21 +23,22 @@ class Item(models.Model):
     condition = models.CharField(
         max_length=4,
         choices=[('USED', 'Used'), ('NEW', 'New')],
-        default='NEW', 
-        blank=False, 
+        default='NEW',
+        blank=False,
         null=False,
         db_index=True
     )
 
     current_year = timezone.now().year
     manufacture_year = models.IntegerField(
-    blank=True,
-    null=True,
-    validators=[
-        MinValueValidator(1582),  # Gregorian calendar start year
-        MaxValueValidator(current_year + 1)  # Allow current year plus next year
-    ],
-    help_text="Enter a year between 1582 and the current year"
+        blank=True,
+        null=True,
+        validators=[
+            MinValueValidator(1582),  # Gregorian calendar start year
+            # Allow current year plus next year
+            MaxValueValidator(current_year + 1)
+        ],
+        help_text="Enter a year between 1582 and the current year"
     )
 
     country_of_origin = models.CharField(max_length=40, blank=True, null=True)
@@ -88,23 +90,24 @@ class Item(models.Model):
         decimal_places=2,
         validators=[MinValueValidator(0.01)],
         blank=True,
-        null=True    
-        )
+        null=True
+    )
 
     start_time = models.DateTimeField(
         default=timezone.now
     )
 
     end_time = models.DateTimeField(
-        blank=False, 
+        blank=False,
         null=False,
         db_index=True
     )
 
-    bid_history_json = models.JSONField(
-        default=list, blank=True, null=True)  # New field
+    images = models.JSONField(default=list, blank=True, null=True)
 
-    # final bidder is final bid/highest bid, should be able to account for without need of another foriegnkey
+    bid_history_json = models.JSONField(
+        default=list, blank=True, null=True)
+
     highest_bidder = models.ForeignKey(
         "authentication.User",
         related_name="highest_bidder",
@@ -113,6 +116,10 @@ class Item(models.Model):
         blank=True
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    payment_confirmation = models.CharField(
+        max_length=20, blank=True, null=True)
 
-    images = models.JSONField(default=list, blank=True) # on hold
+    shipping_info = models.JSONField(
+        default=dict, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
