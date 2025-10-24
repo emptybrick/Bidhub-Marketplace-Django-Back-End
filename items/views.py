@@ -14,15 +14,15 @@ from bids.serializer import BidSerializer
 
 
 class ItemPagination(PageNumberPagination):
-    page_size = 20
+    page_size = 10
     page_size_query_param = 'page_size'
-    max_page_size = 50
+    max_page_size = 100
 
 
 class ItemListView(APIView):
     permission_classes = (IsAuthenticatedOrReadOnly,)
     pagination_class = ItemPagination
-    allowed_page_sizes = [5, 10, 20]  # allowed choices for page_size
+    allowed_page_sizes = [10, 20, 40, 50, 100]  # allowed choices for page_size
 
     # GET All Items
     def get(self, request):
