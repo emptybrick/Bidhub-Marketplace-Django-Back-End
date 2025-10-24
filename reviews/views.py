@@ -183,17 +183,24 @@ class SellerReviews(APIView):
     pagination_class = ReviewPagination
 
     def get(self, request, seller_id):
+        print(request.query_params)
         """Get all reviews for a seller with filtering and sorting"""
         reviews = Review.objects.filter(seller_id=seller_id)
 
         # Sort options refer to sellerpage.jsx for sort options in frontend
-        sort_by = request.query_params.get(
-            'sort', '-created_at')  # Default newest first
-        if sort_by not in ['created_at', '-created_at', 'rating', '-rating']:
-            sort_by = '-created_at'  # Default to newest
-
-        # Takes the queryset of reviews and orders them by the chosen field
-        reviews = reviews.order_by(sort_by)
+        sort_by_date = request.query_params.get('dateSort', 'none')
+        sort_by_rating = request.query_params.get('ratingSort', 'none')
+        print("getting reviews, and sorting by: ", sort_by_date, sort_by_rating)
+        if sort_by_date != 'none':
+            if sort_by_date == 'asc':
+                reviews = reviews.order_by("created_at")
+            elif sort_by_date == 'desc':
+                reviews = reviews.order_by("-created_at")
+        if sort_by_rating != 'none':
+            if sort_by_rating == 'asc':
+                reviews = reviews.order_by("rating")
+            elif sort_by_rating == 'desc':
+                reviews = reviews.order_by("-rating")
 
         # Paginate results
         paginator = self.pagination_class()
