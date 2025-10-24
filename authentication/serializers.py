@@ -43,10 +43,8 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = (
             'id', 'email', 'username', 'first_name', 'last_name', 'user_rating', 'favorites',
-            'password', 'password_confirmation', 'items_sold', "date_joined"
-        )
-        read_only_fields = ('id', 'email', 'username')
-        
+            'password', 'password_confirmation', 'items_sold', "date_joined", 'profile_image'
+        )        
 
 class UsernameSerializer(serializers.ModelSerializer):
     class Meta:
@@ -57,6 +55,6 @@ class UsernameSerializer(serializers.ModelSerializer):
 class SellerProfileViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'user_rating', 'items_sold', "date_joined")
+        fields = ('id', 'username', 'user_rating', 'items_sold', "date_joined", "profile_image")
         read_only_fields = ('id', 'username', 'user_rating',
-                            'items_sold', "date_joined")
+                            'items_sold', "date_joined", "profile_image")
