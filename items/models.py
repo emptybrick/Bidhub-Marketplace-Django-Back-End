@@ -7,7 +7,7 @@ from django.utils import timezone
 
 class Item(models.Model):
     item_name = models.CharField(
-        max_length=80,
+        max_length=24,
         blank=False,
         null=False
     )
