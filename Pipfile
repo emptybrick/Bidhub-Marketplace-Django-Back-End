@@ -7,10 +7,11 @@ name = "pypi"
 django-cors-headers = "*"
 autopep8 = "*"
 pyjwt = "*"
+python-dotenv = "*"
 psycopg2-binary = "*"
 djangorestframework = "*"
 django = "*"
-python-dotenv = "*"
+python-decouple = "*"
 
 [dev-packages]
 autopep8 = "*"

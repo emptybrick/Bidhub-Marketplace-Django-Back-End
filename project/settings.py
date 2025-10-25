@@ -2,6 +2,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 load_dotenv()
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     'reviews',
     'items',
     'wallet',
+    'payments',
     'corsheaders',
 ]
 
@@ -107,7 +109,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
+PAYPAL_SECRET = config('PAYPAL_SECRET')
+PAYPAL_MODE = 'sandbox'  # Change to 'live' for production
 
 LANGUAGE_CODE = 'en-us'
 
