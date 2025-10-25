@@ -110,6 +110,21 @@ Setup & Installation
 
    TBC
 
+Cloudinary Python SDK set up
+
+   1. Set up and configure the backend Python SDK
+In a terminal in your Python3 environment, run the following code:
+
+pip3 install cloudinary
+pip3 install python-dotenv
+
+In your project, create a file called .env containing your API environment variable from your product environment credentials:
+
+# Copy and paste your API environment variable
+# =============================================
+
+CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>
+
 Testing
 
     •	Backend: Django tests for models, views, permissions
