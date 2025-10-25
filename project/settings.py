@@ -1,8 +1,8 @@
+from decouple import config
 from pathlib import Path
 from dotenv import load_dotenv
 import os
 load_dotenv()
-from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -44,11 +44,12 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://localhost:5173", 
+    "http://localhost:5173",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_HEADERS = ["authorization", "content-type"]
 
 ROOT_URLCONF = 'project.urls'
 
@@ -109,9 +110,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# PayPal Configuration
 PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
+PAYPAL_API_BASE_URL = 'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
+
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 

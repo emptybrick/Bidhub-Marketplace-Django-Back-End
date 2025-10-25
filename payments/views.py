@@ -8,81 +8,50 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-import paypalrestsdk
+import requests
+import base64
 from payments.models import Payment
-from payments.serializers.common import PaymentSerializer
 from items.models import Item
+import logging
 
-# Configure PayPal SDK
-paypalrestsdk.configure({
-    "mode": settings.PAYPAL_MODE,
-    "client_id": settings.PAYPAL_CLIENT_ID,
-    "client_secret": settings.PAYPAL_CLIENT_SECRET
-})
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def get_access_token(request):
-    url = f"https://api.{settings.PAYPAL_MODE}.paypal.com/v1/oauth2/token"
-    headers = {"Accept": "application/json", "Accept-Language": "en_US"}
-    data = {"grant_type": "client_credentials"}
-    auth = (settings.PAYPAL_CLIENT_ID, settings.PAYPAL_SECRET)
-    response = requests.post(url, headers=headers, data=data, auth=auth)
-    return JsonResponse({"access_token": response.json()["access_token"]})
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def create_order(request):
-    access_token = get_access_token(request).content.decode()[
-        "access_token"]  # Fetch token
-    url = f"https://api.{settings.PAYPAL_MODE}.paypal.com/v2/checkout/orders"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {access_token}"
-    }
-    # Example payload: Adjust for your app (e.g., dynamic amount from cart)
-    payload = {
-        "intent": "CAPTURE",
-        "purchase_units": [{
-            "amount": {
-                "currency_code": "USD",
-                "value": "10.00"  # Test amount
-            },
-            "description": "Test Product"
-        }]
-    }
-    response = requests.post(url, headers=headers, json=payload)
-    data = response.json()
-    if response.status_code == 201:
-        return JsonResponse({"id": data["id"], "links": data["links"]})
-    return JsonResponse({"error": data}, status=400)
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def capture_order(request):
-    order_id = request.POST.get("orderID")
-    payer_id = request.POST.get("payerID")  # From frontend approval
-    access_token = get_access_token(request).content.decode()["access_token"]
-    url = f"https://api.{settings.PAYPAL_MODE}.paypal.com/v2/checkout/orders/{order_id}/capture"
-    headers = {"Content-Type": "application/json",
-               "Authorization": f"Bearer {access_token}"}
-    response = requests.post(url, headers=headers)
-    data = response.json()
-    if response.status_code == 201:
-        # Save to DB: e.g., mark order as paid
-        return JsonResponse({"status": "success", "details": data})
-    return JsonResponse({"error": data}, status=400)
+logger = logging.getLogger(__name__)
 
 
 class CreateOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get_access_token(self):
+        """Get PayPal OAuth token"""
+        try:
+            url = f"{settings.PAYPAL_API_BASE_URL}/v1/oauth2/token"
+            auth = base64.b64encode(
+                f"{settings.PAYPAL_CLIENT_ID}:{settings.PAYPAL_CLIENT_SECRET}".encode()
+            ).decode()
+
+            headers = {
+                "Authorization": f"Basic {auth}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+
+            data = {"grant_type": "client_credentials"}
+            response = requests.post(
+                url, headers=headers, data=data, timeout=10)
+            response.raise_for_status()
+            return response.json().get("access_token")
+        except Exception as e:
+            logger.error(f"Failed to get PayPal access token: {str(e)}")
+            raise
+
     def post(self, request):
         item_id = request.data.get('item_id')
-        shipping_address = request.data.get('shipping_address')
+        shipping_address = request.data.get('shipping_address', {})
+
+        # Validate required fields
+        if not item_id:
+            return Response(
+                {"error": "item_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             item = Item.objects.get(id=item_id)
@@ -92,68 +61,115 @@ class CreateOrderView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Create PayPal payment
-        payment = paypalrestsdk.Payment({
-            "intent": "sale",
-            "payer": {
-                "payment_method": "paypal"
-            },
-            "redirect_urls": {
-                "return_url": f"{settings.FRONTEND_URL}/payment/success",
-                "cancel_url": f"{settings.FRONTEND_URL}/payment/cancel"
-            },
-            "transactions": [{
-                "item_list": {
+        try:
+            # Get PayPal access token
+            access_token = self.get_access_token()
+
+            # Create PayPal order
+            url = f"{settings.PAYPAL_API_BASE_URL}/v2/checkout/orders"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
+
+            # Ensure current_bid is valid
+            amount = str(float(item.current_bid))
+
+            payload = {
+                "intent": "CAPTURE",
+                "purchase_units": [{
+                    "amount": {
+                        "currency_code": "USD",
+                        "value": amount,
+                        "breakdown": {
+                            "item_total": {
+                                "currency_code": "USD",
+                                "value": amount
+                            }
+                        }
+                    },
                     "items": [{
-                        "name": item.item_name,
-                        "sku": str(item.id),
-                        "price": str(item.current_bid),
-                        "currency": "USD",
-                        "quantity": 1
+                        "name": item.item_name[:127],  # PayPal limit
+                        "unit_amount": {
+                            "currency_code": "USD",
+                            "value": amount
+                        },
+                        "quantity": "1",
+                        "description": (item.item_description[:100] if item.item_description else "")[:127],
+                        "sku": str(item.id)
                     }]
-                },
-                "amount": {
-                    "total": str(item.current_bid),
-                    "currency": "USD"
-                },
-                "description": f"Purchase of {item.item_name}"
-            }]
-        })
+                }]
+            }
 
-        if payment.create():
-            # Save payment record
-            Payment.objects.create(
-                user=request.user,
-                item=item,
-                paypal_order_id=payment.id,
-                amount=item.current_bid,
-                shipping_address=shipping_address,
-                status='pending'
-            )
+            logger.info(f"Creating PayPal order with payload: {payload}")
+            response = requests.post(
+                url, json=payload, headers=headers, timeout=10)
+            order_data = response.json()
 
-            # Find approval URL
-            approval_url = next(
-                (link.href for link in payment.links if link.rel == "approval_url"),
-                None
-            )
+            if response.status_code == 201:
+                # Save payment record
+                Payment.objects.create(
+                    user=request.user,
+                    item=item,
+                    paypal_order_id=order_data['id'],
+                    amount=item.current_bid,
+                    shipping_address=shipping_address,
+                    status='pending'
+                )
 
-            return Response({
-                "order_id": payment.id,
-                "approval_url": approval_url
-            }, status=status.HTTP_201_CREATED)
-        else:
+                return Response({
+                    "order_id": order_data['id']
+                }, status=status.HTTP_201_CREATED)
+            else:
+                logger.error(f"PayPal order creation failed: {order_data}")
+                return Response(
+                    {"error": order_data.get(
+                        'message', 'Failed to create order'), "details": order_data},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        except Exception as e:
+            logger.error(
+                f"Error creating PayPal order: {str(e)}", exc_info=True)
             return Response(
-                {"error": payment.error},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Internal server error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
 class CaptureOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
+    def get_access_token(self):
+        """Get PayPal OAuth token"""
+        try:
+            url = f"{settings.PAYPAL_API_BASE_URL}/v1/oauth2/token"
+            auth = base64.b64encode(
+                f"{settings.PAYPAL_CLIENT_ID}:{settings.PAYPAL_CLIENT_SECRET}".encode()
+            ).decode()
+
+            headers = {
+                "Authorization": f"Basic {auth}",
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+
+            data = {"grant_type": "client_credentials"}
+            response = requests.post(
+                url, headers=headers, data=data, timeout=10)
+            response.raise_for_status()
+            return response.json().get("access_token")
+        except Exception as e:
+            logger.error(f"Failed to get PayPal access token: {str(e)}")
+            raise
+
     def post(self, request):
         order_id = request.data.get('order_id')
-        payer_id = request.data.get('payer_id')
+
+        if not order_id:
+            return Response(
+                {"error": "order_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             payment_record = Payment.objects.get(paypal_order_id=order_id)
@@ -163,29 +179,54 @@ class CaptureOrderView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        payment = paypalrestsdk.Payment.find(order_id)
+        try:
+            # Get PayPal access token
+            access_token = self.get_access_token()
 
-        if payment.execute({"payer_id": payer_id}):
-            # Update payment status
-            payment_record.status = 'completed'
-            payment_record.save()
+            # Capture PayPal order
+            url = f"{settings.PAYPAL_API_BASE_URL}/v2/checkout/orders/{order_id}/capture"
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}"
+            }
 
-            # Update item
-            item = payment_record.item
-            item.highest_bidder = request.user
-            item.payment_confirmation = True
-            item.save()
+            response = requests.post(url, headers=headers, timeout=10)
+            capture_data = response.json()
 
-            return Response({
-                "message": "Payment completed successfully",
-                "payment": PaymentSerializer(payment_record).data
-            }, status=status.HTTP_200_OK)
-        else:
+            if response.status_code == 201:
+                # Update payment status
+                payment_record.status = 'completed'
+                payment_record.save()
+
+                # Update item
+                item = payment_record.item
+                item.highest_bidder = request.user
+                if hasattr(item, 'payment_confirmation'):
+                    item.payment_confirmation = True
+                item.save()
+
+                return Response({
+                    "message": "Payment completed successfully",
+                    "order_id": order_id
+                }, status=status.HTTP_200_OK)
+            else:
+                logger.error(f"PayPal capture failed: {capture_data}")
+                payment_record.status = 'failed'
+                payment_record.save()
+                return Response(
+                    {"error": capture_data.get(
+                        'message', 'Failed to capture payment'), "details": capture_data},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        except Exception as e:
+            logger.error(
+                f"Error capturing PayPal order: {str(e)}", exc_info=True)
             payment_record.status = 'failed'
             payment_record.save()
             return Response(
-                {"error": payment.error},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": f"Internal server error: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
