@@ -1,10 +1,14 @@
+from dotenv import load_dotenv
 from decouple import config
 from pathlib import Path
-from dotenv import load_dotenv
 import os
-load_dotenv()
 
+# Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Force load .env from BASE_DIR (where manage.py is)
+env_path = BASE_DIR / '.env'
+load_dotenv(dotenv_path=env_path, override=True)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
 
@@ -115,6 +119,11 @@ PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID')
 PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 PAYPAL_API_BASE_URL = 'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
+
+# Debug output (remove in production)
+print(f"Loading .env from: {env_path}")
+print(f"PAYPAL_CLIENT_ID loaded: {PAYPAL_CLIENT_ID[:10]}..." if PAYPAL_CLIENT_ID else "PAYPAL_CLIENT_ID is None")
+print(f"PAYPAL_API_BASE_URL: {PAYPAL_API_BASE_URL}")
 
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 

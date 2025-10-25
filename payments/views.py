@@ -47,7 +47,6 @@ class CreateOrderView(APIView):
         item_id = request.data.get('item_id')
         shipping_address = request.data.get('shipping_address', {})
 
-        # Validate required fields
         if not item_id:
             return Response(
                 {"error": "item_id is required"},
@@ -76,6 +75,10 @@ class CreateOrderView(APIView):
             # Ensure current_bid is valid
             amount = str(float(item.current_bid))
 
+            # Get description - use getattr to safely access the field
+            description = getattr(item, 'description', None) or getattr(
+                item, 'item_desc', None) or "Item"
+
             payload = {
                 "intent": "CAPTURE",
                 "purchase_units": [{
@@ -96,8 +99,9 @@ class CreateOrderView(APIView):
                             "value": amount
                         },
                         "quantity": "1",
-                        "description": (item.item_description[:100] if item.item_description else "")[:127],
-                        "sku": str(item.id)
+                        "description": description[:127] if description else "Item",
+                        "sku": str(item.id),
+                        "category": "PHYSICAL_GOODS"
                     }]
                 }]
             }
@@ -202,8 +206,6 @@ class CaptureOrderView(APIView):
                 # Update item
                 item = payment_record.item
                 item.highest_bidder = request.user
-                if hasattr(item, 'payment_confirmation'):
-                    item.payment_confirmation = True
                 item.save()
 
                 return Response({
