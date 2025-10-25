@@ -40,6 +40,7 @@ class ItemListView(APIView):
         sort_by_user_bids = request.query_params.get("userbids", 'false')
         sort_by_user_favorites = request.query_params.get("favorites", 'false')
         sort_by_purchased = request.query_params.get('purchased', 'false')
+        sort_by_auction_failed = request.query_params.get('auctionFailed', 'false')
         user = request.user
 
         if request.user.is_anonymous != True:
@@ -68,6 +69,12 @@ class ItemListView(APIView):
             items = Item.objects.filter(
                 owner=user,
                 highest_bidder__isnull=False,
+                end_time__lt=timezone.now()
+            )
+        elif sort_by_auction_failed != "false":
+            items = Item.objects.filter(
+                owner=user,
+                highest_bidder__isnull=True,
                 end_time__lt=timezone.now()
             )
         elif sort_by_purchased == 'false':
