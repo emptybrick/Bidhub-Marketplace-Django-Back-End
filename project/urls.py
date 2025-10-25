@@ -26,5 +26,6 @@ urlpatterns = [
     ])),
     path('bidhub/seller/<int:seller_id>/reviews/', include('reviews.urls')),
     path('bidhub/paypal/', include('payments.urls')),
+    path('bidhub/payments/', include('payments.urls')),
     # path('wallet/', include('wallet.urls')),
 ]

@@ -1,7 +1,6 @@
 from django.db import models
 from common.utils import Item_Categories
 from django.core.validators import MinValueValidator, MaxValueValidator
-# from datetime import datetime
 from django.utils import timezone
 
 

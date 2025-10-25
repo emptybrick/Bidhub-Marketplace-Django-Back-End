@@ -106,6 +106,8 @@ Setup & Installation
 Install the official @paypal/react-paypal-js library for the payment button.
     npm install @paypal/react-paypal-js axios
 
+    npm install @paypal/react-paypal-js
+
 
 3. Backend (Django) – quick start
 
