@@ -67,8 +67,8 @@ class Item(models.Model):
     weight = models.DecimalField(
         blank=False,
         null=False,
-        max_digits=6,
-        decimal_places=2,
+        max_digits=8,
+        decimal_places=3,
         validators=[MinValueValidator(0.01)]
     )
 

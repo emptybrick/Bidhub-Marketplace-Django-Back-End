@@ -23,7 +23,7 @@ class ReviewPagination(PageNumberPagination):
 
 
 def GetAverageRating(review_data):
-    # Sum the 5 rating components and divide by 5
+    # Sum the 5 rating components and divide by 10 for 0.1-5 rating
     ratings = [
         review_data.get('service_rating', 0),
         review_data.get('product_rating', 0),
