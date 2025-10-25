@@ -47,7 +47,7 @@ class RegisterView(APIView):
     def post(self, request):
         data = request.data.copy()  # make mutable copy
         # Remove/convert empty numeric fields so DecimalField won't receive ""
-        for key in ("wallet", "user_rating"):
+        for key in ("user_rating",):
             if key in data and (data.get(key) == "" or data.get(key) is None):
                 data.pop(key, None)
 
