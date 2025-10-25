@@ -109,9 +109,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID')
-PAYPAL_SECRET = config('PAYPAL_SECRET')
-PAYPAL_MODE = 'sandbox'  # Change to 'live' for production
+PAYPAL_CLIENT_ID = os.getenv('PAYPAL_CLIENT_ID')
+PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
+PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+
 
 LANGUAGE_CODE = 'en-us'
 
