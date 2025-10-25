@@ -69,7 +69,7 @@ class Item(models.Model):
         null=False,
         max_digits=8,
         decimal_places=3,
-        validators=[MinValueValidator(0.01)]
+        validators=[MinValueValidator(0.001)]
     )
 
     description = models.TextField(

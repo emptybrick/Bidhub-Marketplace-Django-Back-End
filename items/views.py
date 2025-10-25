@@ -11,7 +11,8 @@ from .serializers.common import ItemSerializer, ShippingAndPaymentSerializer
 from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from bids.serializer import BidSerializer
-
+from datetime import datetime
+import pytz
 
 class ItemPagination(PageNumberPagination):
     page_size = 10
@@ -120,10 +121,11 @@ class ItemListView(APIView):
 class CreateItem(APIView):
     def post(self, request):
         """Create a new item"""
+
         request.data["owner"] = request.user.id
         request.data["current_bid"] = request.data["initial_bid"]
         item_to_add = ItemSerializer(data=request.data)
-
+        
         try:
             item_to_add.is_valid(raise_exception=True)
             item_to_add.save()
@@ -200,6 +202,7 @@ class ItemDetailView(APIView):
         item_to_delete.delete()
         return Response({"detail": "Item has been successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
 
+
 class UpdateShippingAndPaymentView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -227,7 +230,7 @@ class UpdateShippingAndPaymentView(APIView):
 
         serializer = ShippingAndPaymentSerializer(
             item_to_update, data={'shipping_info': shipping_info, 'payment_confirmation': payment_confirmation}, partial=True)
-        
+
         if serializer.is_valid():
             serializer.save()
             return Response({"detail": "Shipping information updated successfully.", "data": serializer.data},
