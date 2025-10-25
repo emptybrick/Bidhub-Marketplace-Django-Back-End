@@ -152,9 +152,6 @@ class ItemDetailView(APIView):
         item = self.get_item(pk=item_id)  # Use helper method
         serialized_item = PopulatedItemSerializer(item)
         data = serialized_item.data
-        bid_history = item.bids.all().order_by('-bid')
-        bid_serializer = BidSerializer(bid_history, many=True)
-        data['bid_history_json'] = bid_serializer.data
 
         return Response(data, status=status.HTTP_200_OK)
 

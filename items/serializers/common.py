@@ -16,6 +16,10 @@ class ItemSerializer(serializers.ModelSerializer):
                 "End time cannot be earlier than the current time.")
         return value
 
+class ItemBidUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Item
+        fields =[ 'bid_history_json', 'highest_bidder', 'current_bid']
 
 class ShippingAndPaymentSerializer(serializers.ModelSerializer):
     shipping_info = serializers.JSONField()
