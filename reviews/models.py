@@ -8,7 +8,7 @@ class Review(models.Model):
         null=True,
         max_digits=2,
         decimal_places=1,
-        validators=[MinValueValidator(0.1)]
+        validators=[MinValueValidator(1)]
     )
     seller_id = models.ForeignKey(
         'authentication.User',
@@ -30,7 +30,7 @@ class Review(models.Model):
         blank=False,
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(10)
+            MaxValueValidator(5)
         ]
     )
     product_rating = models.IntegerField(
@@ -38,7 +38,7 @@ class Review(models.Model):
         blank=False,
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(10)
+            MaxValueValidator(5)
         ]
     )
     packaging_rating = models.IntegerField(
@@ -46,7 +46,7 @@ class Review(models.Model):
         blank=False,
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(10)
+            MaxValueValidator(5)
         ]
     )
     shipping_rating = models.IntegerField(
@@ -54,7 +54,7 @@ class Review(models.Model):
         blank=False,
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(10)
+            MaxValueValidator(5)
         ]
     )
     overall_rating = models.IntegerField(
@@ -62,7 +62,7 @@ class Review(models.Model):
         blank=False,
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(10)
+            MaxValueValidator(5)
         ]
     )
     created_at = models.DateTimeField(auto_now_add=True)

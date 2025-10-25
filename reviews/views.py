@@ -23,17 +23,17 @@ class ReviewPagination(PageNumberPagination):
 
 
 def GetAverageRating(review_data):
-    # Sum the 5 rating components and divide by 10 for 0.1-5 rating
+    # Sum the 5 rating components and divide by 5 for 1-5 rating
     ratings = [
-        review_data.get('service_rating', 0),
-        review_data.get('product_rating', 0),
-        review_data.get('packaging_rating', 0),
-        review_data.get('shipping_rating', 0),
-        review_data.get('overall_rating', 0)
+        review_data.get('service_rating', 1),
+        review_data.get('product_rating', 1),
+        review_data.get('packaging_rating', 1),
+        review_data.get('shipping_rating', 1),
+        review_data.get('overall_rating', 1)
     ]
     # Ensure ratings are numeric and handle missing/invalid data
     valid_ratings = [float(r) for r in ratings if r is not None]
-    return round(sum(valid_ratings) / 10, 2) if valid_ratings else 0.01
+    return round(sum(valid_ratings) / 5, 2) if valid_ratings else 1
 
 
 def UpdateSellerRating(seller_id, review_data, seller):
@@ -48,8 +48,8 @@ def UpdateSellerRating(seller_id, review_data, seller):
         seller_average_rating = Decimal(f'{seller_average_rating:.2f}')
 
     # Ensure minimum value
-    if seller_average_rating < Decimal('0.01'):
-        seller_average_rating = Decimal('0.01')
+    if seller_average_rating < Decimal('1'):
+        seller_average_rating = Decimal('1')
 
     # Prepare data for serializer
     seller_data = {'user_rating': seller_average_rating}
