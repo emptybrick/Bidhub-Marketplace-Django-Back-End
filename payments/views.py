@@ -241,11 +241,23 @@ class PaymentHistoryView(APIView):
         serializer = PaymentSerializer(payments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 class GetPaymentByItemId(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, item_id):
-        item = Item.objects.filter(pk=item_id)
-        payment = Payment.objects.filter(item=item)
-        serializer = PaymentSerializer(payment, many=True)
+        try:
+            item = Item.objects.get(pk=item_id)
+        except Item.DoesNotExist:
+            raise status.HTTP_404_NOT_FOUND("Item not found")
+
+        # Ensure the user has permission to view payments for this item
+        if item.user != request.user and not request.user.is_staff:
+            return Response(
+                {"error": "You do not have permission to view this payment."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        payments = Payment.objects.filter(item=item)
+        serializer = PaymentSerializer(payments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
