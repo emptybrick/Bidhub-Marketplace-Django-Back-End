@@ -252,12 +252,6 @@ class GetPaymentByItemId(APIView):
         except Item.DoesNotExist:
             raise status.HTTP_404_NOT_FOUND("Item not found")
         print('got item', item)
-        # Ensure the user has permission to view payments for this item
-        if item.owner != request.user or item.highest_bidder != request.user:
-            return Response(
-                {"error": "You do not have permission to view this payment."},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
         payment = Payment.objects.filter(item=item)
         print('got payment', payment)
