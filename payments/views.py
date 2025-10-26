@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers.common import PaymentSerializer
+from .serializers.common import PaymentSerializer, GetPaymentSerializer
 import requests
 import base64
 from payments.models import Payment
@@ -255,5 +255,5 @@ class GetPaymentByItemId(APIView):
 
         payment = Payment.objects.filter(item=item)
         print('got payment', payment)
-        serializer = PaymentSerializer(payment)
+        serializer = GetPaymentSerializer(payment)
         return Response(serializer.data, status=status.HTTP_200_OK)
