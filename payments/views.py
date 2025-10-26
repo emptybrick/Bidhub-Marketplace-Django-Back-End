@@ -253,7 +253,7 @@ class GetPaymentByItemId(APIView):
             raise status.HTTP_404_NOT_FOUND("Item not found")
         print('got item', item)
 
-        payment = Payment.objects.filter(item=item)
+        payment = Payment.objects.get(item=item)
         print('got payment', payment)
         serializer = GetPaymentSerializer(payment)
         return Response(serializer.data, status=status.HTTP_200_OK)

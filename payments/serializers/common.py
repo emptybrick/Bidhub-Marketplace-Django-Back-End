@@ -12,4 +12,4 @@ class GetPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = '__all__'
-        read_only_fields = fields
+        read_only_fields = ['__all__',]
