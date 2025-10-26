@@ -124,6 +124,11 @@ class ItemListView(APIView):
         serializer = ItemSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
 
+    def get_queryset(self):
+        qs = Item.objects.all()
+        # ...existing filters...
+        return qs.order_by('-created_at', '-id')
+
 
 class CreateItem(APIView):
     def post(self, request):
