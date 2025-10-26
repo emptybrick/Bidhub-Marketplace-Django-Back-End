@@ -258,6 +258,6 @@ class GetPaymentByItemId(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        payments = Payment.objects.filter(item=item)
-        serializer = PaymentSerializer(payments, many=True)
+        payment = Payment.objects.filter(item=item)
+        serializer = PaymentSerializer(payment)
         return Response(serializer.data, status=status.HTTP_200_OK)
