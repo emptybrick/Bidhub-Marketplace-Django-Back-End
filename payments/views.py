@@ -246,11 +246,12 @@ class GetPaymentByItemId(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, item_id):
+        print('trying to get payment', item_id)
         try:
             item = Item.objects.get(pk=item_id)
         except Item.DoesNotExist:
             raise status.HTTP_404_NOT_FOUND("Item not found")
-
+        print('got item', item)
         # Ensure the user has permission to view payments for this item
         if item.user != request.user and not request.user.is_staff:
             return Response(
@@ -259,5 +260,6 @@ class GetPaymentByItemId(APIView):
             )
 
         payment = Payment.objects.filter(item=item)
+        print('got payment', payment)
         serializer = PaymentSerializer(payment)
         return Response(serializer.data, status=status.HTTP_200_OK)
