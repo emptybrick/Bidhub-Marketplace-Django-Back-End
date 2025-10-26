@@ -170,7 +170,6 @@ class FavoritesListView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-# currently items_sold is never saved it is just calculated when sellerview is requested and sent with request
 class SellerProfileView(APIView):
     permission_classes = (permissions.IsAuthenticated, )
 

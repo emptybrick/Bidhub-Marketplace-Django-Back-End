@@ -134,9 +134,13 @@ class CreateItem(APIView):
     def post(self, request):
         """Create a new item"""
 
-        request.data["owner"] = request.user.id
-        request.data["current_bid"] = request.data["initial_bid"]
-        item_to_add = ItemSerializer(data=request.data)
+        data = request.data.copy()
+        data["owner"] = request.user.id
+        data["current_bid"] = request.data["initial_bid"]
+        # data["height"] = round((float(data['height'])), 2)
+        print(data["height"])
+        
+        item_to_add = ItemSerializer(data=data)
         
         try:
             item_to_add.is_valid(raise_exception=True)

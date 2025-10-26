@@ -2,6 +2,7 @@ from django.db import models
 from common.utils import Item_Categories
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from decimal import Decimal
 
 
 class Item(models.Model):
@@ -47,28 +48,28 @@ class Item(models.Model):
         null=False,
         max_digits=6,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)])
+        validators=[MinValueValidator(0.0)])
 
     width = models.DecimalField(
         blank=False,
         null=False,
         max_digits=6,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)])
+        validators=[MinValueValidator(0.0)])
 
     length = models.DecimalField(
         blank=False,
         null=False,
         max_digits=6,
         decimal_places=2,
-        validators=[MinValueValidator(0.01)])
+        validators=[MinValueValidator(0.0)])
 
     weight = models.DecimalField(
         blank=False,
         null=False,
         max_digits=8,
         decimal_places=3,
-        validators=[MinValueValidator(0.001)]
+        validators=[MinValueValidator(0.0)]
     )
 
     description = models.TextField(
