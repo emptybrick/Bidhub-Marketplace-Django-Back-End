@@ -8,14 +8,12 @@ from django.utils import timezone
 from items.models import Item
 from .serializer import BidSerializer
 from items.serializers.common import ItemBidUpdateSerializer
-from collections import deque
 
 
 class CreateBid(APIView):
     def post(self, request, item_id):
         """Create a new bid for an item"""
         bid_str = request.data["bid"]
-        print(bid_str)
         try:
             # Check if item exists
             item = Item.objects.get(pk=item_id)

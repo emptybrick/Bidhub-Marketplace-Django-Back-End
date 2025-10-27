@@ -2,7 +2,6 @@ from django.db import models
 from common.utils import Item_Categories
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
-from decimal import Decimal
 
 
 class Item(models.Model):

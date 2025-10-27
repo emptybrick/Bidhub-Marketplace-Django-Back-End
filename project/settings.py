@@ -28,7 +28,6 @@ INSTALLED_APPS = [
     'bids',
     'reviews',
     'items',
-    'wallet',
     'payments',
     'corsheaders',
 ]
@@ -122,13 +121,7 @@ PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 PAYPAL_API_BASE_URL = 'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
 
-# Debug output (remove in production)
-print(f"Loading .env from: {env_path}")
-print(f"PAYPAL_CLIENT_ID loaded: {PAYPAL_CLIENT_ID[:10]}..." if PAYPAL_CLIENT_ID else "PAYPAL_CLIENT_ID is None")
-print(f"PAYPAL_API_BASE_URL: {PAYPAL_API_BASE_URL}")
-
 FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
-
 
 LANGUAGE_CODE = 'en-us'
 
@@ -138,13 +131,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
