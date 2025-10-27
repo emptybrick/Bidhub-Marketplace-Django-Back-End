@@ -29,9 +29,12 @@ class CreateBid(APIView):
                 return Response({"detail": "Bid must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Get highest bid for this item and compare to bid offer
-            current_bid = item.current_bid
+            # if first bid assign current_bid as initial_bid
+            if item.current_bid == None:
+                current_bid = item.initial_bid
+            else:
+                current_bid = item.current_bid
             if current_bid >= bid:
-
                 return Response({"detail": "Bid offer is lower than or equal to current bid"}, status=status.HTTP_400_BAD_REQUEST)
 
             # Set the bidder to current user and item to the specified item

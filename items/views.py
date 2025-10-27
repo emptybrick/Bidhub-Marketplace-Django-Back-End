@@ -133,7 +133,7 @@ class CreateItem(APIView):
 
         data = request.data.copy()
         data["owner"] = request.user.id
-        data["current_bid"] = request.data["initial_bid"]        
+        # data["current_bid"] = request.data["initial_bid"]        
         item_to_add = ItemSerializer(data=data)
         
         try:
