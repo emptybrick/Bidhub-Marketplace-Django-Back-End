@@ -4,7 +4,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.pagination import PageNumberPagination
-from django.db.models import Avg, Q
+from django.db.models import Avg
 from django.forms.models import model_to_dict
 
 from .models import Review
@@ -43,17 +43,16 @@ def UpdateSellerRating(seller_id, review_data, seller):
 
     # Handle case where no reviews exist
     if seller_average_rating is None:
-        seller_average_rating = Decimal('0.01')
+        seller_average_rating = None  # Set to None when no reviews exist
     else:
         seller_average_rating = Decimal(f'{seller_average_rating:.2f}')
 
-    # Ensure minimum value
-    if seller_average_rating < Decimal('1'):
-        seller_average_rating = Decimal('1')
+    # Ensure minimum value (only for non-null values)
+    if seller_average_rating is not None and seller_average_rating < Decimal('1'):
+        seller_average_rating = Decimal('1.00')
 
     # Prepare data for serializer
     seller_data = {'user_rating': seller_average_rating}
-    print(f"Updating seller {seller_id} with user_rating: {seller_data}")
 
     # Update seller using serializer
     seller_serializer = UserSerializer(
@@ -61,13 +60,9 @@ def UpdateSellerRating(seller_id, review_data, seller):
 
     if seller_serializer.is_valid():
         seller_serializer.save()
-        print(
-            f"Successfully updated seller {seller_id} with user_rating: {seller_average_rating}")
         return Response(seller_serializer.data, status=status.HTTP_200_OK)
 
-    print(f"Serializer errors: {seller_serializer.errors}")
     return Response(seller_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 
 class CreateReview(APIView):
     permission_classes = (IsAuthenticated,)
@@ -183,14 +178,12 @@ class SellerReviews(APIView):
     pagination_class = ReviewPagination
 
     def get(self, request, seller_id):
-        print(request.query_params)
         """Get all reviews for a seller with filtering and sorting"""
         reviews = Review.objects.filter(seller_id=seller_id)
 
         # Sort options refer to sellerpage.jsx for sort options in frontend
         sort_by_date = request.query_params.get('dateSort', 'none')
         sort_by_rating = request.query_params.get('ratingSort', 'none')
-        print("getting reviews, and sorting by: ", sort_by_date, sort_by_rating)
         if sort_by_date != 'none':
             if sort_by_date == 'asc':
                 reviews = reviews.order_by("created_at")

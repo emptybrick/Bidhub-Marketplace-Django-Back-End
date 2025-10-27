@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
 from datetime import datetime, timedelta
@@ -52,7 +52,6 @@ class RegisterView(APIView):
                 data.pop(key, None)
 
         user_to_create = UserSerializer(data=data)
-        print('USER CREATE', user_to_create)
         if user_to_create.is_valid():
             user_to_create.save()
             return Response({'message': 'Registration successful'}, status=status.HTTP_202_ACCEPTED)
@@ -107,23 +106,6 @@ class LogoutView(APIView):
             {"message": "No valid token Found"},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-# GET All Users - Admin Only & Development
-
-
-class UserListView(APIView):
-    #    """View for retrieving user profile information"""
-    permission_classes = (IsAuthenticatedOrReadOnly,)
-
-    def get(self, request):
-        """Get all users for testing purposes"""
-        # Create base queryset
-        users = User.objects.all()
-
-        # Use populated serializer if detailed=true is requested
-        serialized_users = UserSerializer(users, many=True)
-
-        return Response(serialized_users.data, status=status.HTTP_200_OK)
 
 
 class ToggleFavoriteView(APIView):

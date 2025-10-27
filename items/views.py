@@ -10,9 +10,6 @@ from bids.models import Bid
 from .serializers.common import ItemSerializer, ShippingAndPaymentSerializer
 from .serializers.populated import PopulatedItemSerializer
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
-from bids.serializer import BidSerializer
-from datetime import datetime
-import pytz
 
 class ItemPagination(PageNumberPagination):
     page_size = 10
@@ -136,10 +133,7 @@ class CreateItem(APIView):
 
         data = request.data.copy()
         data["owner"] = request.user.id
-        data["current_bid"] = request.data["initial_bid"]
-        # data["height"] = round((float(data['height'])), 2)
-        print(data["height"])
-        
+        # data["current_bid"] = request.data["initial_bid"]        
         item_to_add = ItemSerializer(data=data)
         
         try:
