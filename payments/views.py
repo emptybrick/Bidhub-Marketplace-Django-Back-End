@@ -1,9 +1,4 @@
-from django.shortcuts import render
 from django.conf import settings
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from decouple import config
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -246,14 +241,11 @@ class GetPaymentByItemId(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, item_id):
-        print('trying to get payment', item_id)
         try:
             item = Item.objects.get(pk=item_id)
         except Item.DoesNotExist:
             raise status.HTTP_404_NOT_FOUND("Item not found")
-        print('got item', item)
 
         payment = Payment.objects.get(item=item)
-        print('got payment', payment)
         serializer = GetPaymentSerializer(payment)
         return Response(serializer.data, status=status.HTTP_200_OK)
