@@ -12,6 +12,8 @@ psycopg2-binary = "*"
 djangorestframework = "*"
 django = "*"
 python-decouple = "*"
+dj-database-url = "*"
+gunicorn = "*"
 
 [dev-packages]
 autopep8 = "*"
