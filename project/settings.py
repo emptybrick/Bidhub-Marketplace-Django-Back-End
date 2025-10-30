@@ -116,7 +116,7 @@ PAYPAL_CLIENT_SECRET = os.getenv('PAYPAL_CLIENT_SECRET')
 PAYPAL_MODE = os.getenv('PAYPAL_MODE', 'sandbox')
 PAYPAL_API_BASE_URL = 'https://api-m.sandbox.paypal.com' if PAYPAL_MODE == 'sandbox' else 'https://api-m.paypal.com'
 
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+# FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')
 
 LANGUAGE_CODE = 'en-us'
 
